@@ -22,8 +22,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Request body must be valid JSON." }, { status: 400 });
   }
 
+  const force_ai = new URL(request.url).searchParams.get("force_ai") === "1";
+
   try {
-    const assessment = await evaluate_and_record(payload);
+    const assessment = await evaluate_and_record(payload, { force_ai });
     return NextResponse.json(assessment, { status: 200 });
   } catch (error) {
     if (error instanceof ZodError) {

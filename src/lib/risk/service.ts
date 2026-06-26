@@ -17,15 +17,29 @@ export class UnknownUserError extends Error {
 }
 
 /**
+ * Options controlling how a transfer is evaluated.
+ *
+ * @property force_ai Consult the AI adjudicator regardless of the deterministic
+ *   score. Used by the demo toggle to surface the AI layer on every transfer.
+ */
+export interface EvaluationOptions {
+  force_ai?: boolean;
+}
+
+/**
  * Validates a raw transfer payload, evaluates it through the full firewall, and
  * persists the resulting decision to the audit log.
  *
  * @param payload Untrusted transfer request, typically a parsed request body.
+ * @param options Evaluation options such as forcing AI adjudication.
  * @returns The firewall assessment for the transfer.
  * @throws {z.ZodError}      When the payload fails schema validation.
  * @throws {UnknownUserError} When the user has no behavioral profile.
  */
-export async function evaluate_and_record(payload: unknown): Promise<RiskAssessment> {
+export async function evaluate_and_record(
+  payload: unknown,
+  options: EvaluationOptions = {},
+): Promise<RiskAssessment> {
   const transaction = parse_transaction(payload);
   const repository = get_repository();
 
@@ -41,6 +55,7 @@ export async function evaluate_and_record(payload: unknown): Promise<RiskAssessm
     profile,
     recent_transactions,
     adjudicator: kimi_adjudicator,
+    force_ai: options.force_ai,
   });
 
   repository.record_decision(transaction, assessment);

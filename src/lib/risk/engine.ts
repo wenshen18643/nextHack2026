@@ -21,12 +21,17 @@ export type AiAdjudicator = (
 
 /**
  * Inputs required to evaluate a single transfer through the firewall.
+ *
+ * @property force_ai When true, the AI adjudicator is consulted regardless of
+ *   the deterministic score, overriding the mid-band gate. Intended for demos
+ *   and audits, not steady-state production where gating bounds cost.
  */
 export interface EvaluationContext {
   transaction: Transaction;
   profile: BehaviorProfile;
   recent_transactions: Transaction[];
   adjudicator?: AiAdjudicator;
+  force_ai?: boolean;
 }
 
 /**
@@ -43,7 +48,7 @@ export interface EvaluationContext {
 export async function evaluate_transaction(
   context: EvaluationContext,
 ): Promise<RiskAssessment> {
-  const { transaction, profile, recent_transactions, adjudicator } = context;
+  const { transaction, profile, recent_transactions, adjudicator, force_ai } = context;
 
   const deterministic_signals = [
     ...score_behavioral_baseline(transaction, profile),
@@ -53,9 +58,14 @@ export async function evaluate_transaction(
   const deterministic_score = fuse_risk_score(deterministic_signals);
 
   let signals = deterministic_signals;
+  let ai_consulted = false;
   let ai_used = false;
 
-  if (adjudicator && is_ambiguous_midband(deterministic_score)) {
+  const should_adjudicate =
+    adjudicator !== undefined && (force_ai === true || is_ambiguous_midband(deterministic_score));
+
+  if (adjudicator && should_adjudicate) {
+    ai_consulted = true;
     const ai_signal = await adjudicator(transaction, deterministic_signals);
     if (ai_signal) {
       signals = [...deterministic_signals, ai_signal];
@@ -70,6 +80,7 @@ export async function evaluate_transaction(
     state: derive_firewall_state(score),
     reason: summarize_reason(signals),
     signals,
+    ai_consulted,
     ai_used,
   };
 }

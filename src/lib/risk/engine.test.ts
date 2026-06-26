@@ -16,8 +16,24 @@ describe("evaluate_transaction", () => {
     });
 
     expect(result.state).toBe("PASS");
+    expect(result.ai_consulted).toBe(false);
     expect(result.ai_used).toBe(false);
     expect(adjudicator).not.toHaveBeenCalled();
+  });
+
+  it("forces AI consultation outside the mid-band when force_ai is set", async () => {
+    const adjudicator = vi.fn(async () => null);
+    const result = await evaluate_transaction({
+      transaction: make_transaction(),
+      profile: baseline_profile,
+      recent_transactions: [],
+      adjudicator,
+      force_ai: true,
+    });
+
+    expect(adjudicator).toHaveBeenCalledOnce();
+    expect(result.ai_consulted).toBe(true);
+    expect(result.ai_used).toBe(false);
   });
 
   it("denies an obvious high-risk transfer on deterministic signals alone", async () => {
@@ -56,6 +72,7 @@ describe("evaluate_transaction", () => {
     });
 
     expect(adjudicator).toHaveBeenCalledOnce();
+    expect(result.ai_consulted).toBe(true);
     expect(result.ai_used).toBe(true);
     expect(result.signals.some((signal) => signal.layer === "ai")).toBe(true);
   });

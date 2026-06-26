@@ -68,16 +68,18 @@ export interface BehaviorProfile {
 /**
  * Final, fully-explainable verdict for a single transaction.
  *
- * @property score    Fused risk score in the closed interval [0, 100].
- * @property state    Firewall state derived from the score thresholds.
- * @property reason   Concise plain-language summary of the decision.
- * @property signals  Every signal that contributed to the score.
- * @property ai_used  Whether the AI adjudicator layer was invoked.
+ * @property score         Fused risk score in the closed interval [0, 100].
+ * @property state         Firewall state derived from the score thresholds.
+ * @property reason        Concise plain-language summary of the decision.
+ * @property signals       Every signal that contributed to the score.
+ * @property ai_consulted  Whether the AI adjudicator was actually called.
+ * @property ai_used       Whether the AI adjudicator contributed a signal.
  */
 export interface RiskAssessment {
   score: number;
   state: FirewallState;
   reason: string;
   signals: RiskSignal[];
+  ai_consulted: boolean;
   ai_used: boolean;
 }

@@ -45,6 +45,10 @@ export function FirewallModal({
               <span className="mt-1 inline-block rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
                 AI adjudicated
               </span>
+            ) : assessment.ai_consulted ? (
+              <span className="mt-1 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-ink-700">
+                AI reviewed — no added risk
+              </span>
             ) : null}
           </div>
         </div>
