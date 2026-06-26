@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Sentinel — Behavioral Risk Firewall",
+  "version": "0.1.0",
+  "description": "Intercepts web bank and e-wallet transfers and screens them with the Sentinel AI risk firewall before they are confirmed.",
+  "permissions": ["storage", "notifications"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*.vercel.app/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Sentinel",
+    "default_popup": "src/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:3000/mock-bank.html",
+        "https://*.maybank2u.com.my/*",
+        "https://*.cimbclicks.com.my/*",
+        "https://*.pbebank.com/*",
+        "https://*.rhbgroup.com/*",
+        "https://*.hongleongconnect.my/*",
+        "https://*.ambank.com.my/*",
+        "https://*.bankislam.biz/*",
+        "https://*.tngdigital.com.my/*",
+        "https://*.touchngo.com.my/*",
+        "https://*.bigpay.com.my/*",
+        "https://*.grab.com/*"
+      ],
+      "js": ["src/content.js"],
+      "css": ["src/overlay.css"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

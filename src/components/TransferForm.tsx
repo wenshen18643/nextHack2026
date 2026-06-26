@@ -190,13 +190,6 @@ export function TransferForm() {
 
         {error ? <p className="mt-4 text-sm text-rose-700">{error}</p> : null}
 
-        <p className="mt-5 flex items-center gap-2 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-xs text-brand-700">
-          <span className="grid h-5 w-5 place-items-center rounded-full bg-brand-500 text-[10px] font-bold text-white">
-            AI
-          </span>
-          Every transfer is reviewed by Kimi AI before it is released.
-        </p>
-
         <button
           type="submit"
           disabled={is_submitting}

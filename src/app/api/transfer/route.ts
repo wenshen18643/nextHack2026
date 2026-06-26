@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { evaluate_and_record, UnknownUserError } from "@/lib/risk/service";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 /**
  * POST /api/transfer
