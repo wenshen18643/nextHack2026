@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { AiAdjudicator } from "@/lib/risk/engine";
 import type { RiskSignal, Transaction } from "@/lib/risk/types";
 
-const request_timeout_ms = 30000;
+const request_timeout_ms = 55000;
 const default_base_url = "https://api.moonshot.cn/v1";
 const default_model = "moonshot-v1-8k";
 const default_temperature = 0.2;
