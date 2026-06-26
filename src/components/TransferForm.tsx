@@ -83,7 +83,6 @@ export function TransferForm() {
   const [draft, set_draft] = useState<TransferDraft>(initial_draft);
   const [assessment, set_assessment] = useState<RiskAssessment | null>(null);
   const [is_submitting, set_is_submitting] = useState(false);
-  const [force_ai, set_force_ai] = useState(false);
   const [error, set_error] = useState<string | null>(null);
 
   function apply_scenario(scenario: Scenario): void {
@@ -96,8 +95,7 @@ export function TransferForm() {
     set_error(null);
 
     try {
-      const endpoint = force_ai ? "/api/transfer?force_ai=1" : "/api/transfer";
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/transfer?force_ai=1", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -192,20 +190,12 @@ export function TransferForm() {
 
         {error ? <p className="mt-4 text-sm text-rose-700">{error}</p> : null}
 
-        <label className="mt-5 flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-          <input
-            type="checkbox"
-            checked={force_ai}
-            onChange={(event) => set_force_ai(event.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-brand-500"
-          />
-          <span>
-            <span className="font-medium">Force AI adjudication</span>
-            <span className="mt-0.5 block text-xs text-ink-700">
-              Consult Kimi on every transfer, even obvious ones. Adds ~25-30s while the model reasons.
-            </span>
+        <p className="mt-5 flex items-center gap-2 rounded-lg border border-brand-100 bg-brand-50 px-3 py-2 text-xs text-brand-700">
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-brand-500 text-[10px] font-bold text-white">
+            AI
           </span>
-        </label>
+          Every transfer is reviewed by Kimi AI before it is released.
+        </p>
 
         <button
           type="submit"
@@ -236,7 +226,7 @@ export function TransferForm() {
         </ul>
       </aside>
 
-      {is_submitting ? <ScreeningOverlay force_ai={force_ai} /> : null}
+      {is_submitting ? <ScreeningOverlay /> : null}
 
       {assessment ? (
         <FirewallModal assessment={assessment} onClose={() => set_assessment(null)} />
@@ -249,19 +239,15 @@ export function TransferForm() {
  * Full-screen overlay shown while a transfer is being screened. It sets the
  * expectation that AI adjudication is a deliberate, multi-second reasoning step
  * rather than a hung request.
- *
- * @param force_ai Whether AI adjudication was forced, which lengthens the wait.
  */
-function ScreeningOverlay({ force_ai }: { force_ai: boolean }) {
+function ScreeningOverlay() {
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-ink-900/40 p-4">
       <div className="flex w-full max-w-sm flex-col items-center rounded-2xl bg-white p-8 text-center shadow-xl">
         <span className="h-10 w-10 animate-spin rounded-full border-4 border-brand-100 border-t-brand-500" />
-        <p className="mt-5 font-semibold">Screening transfer…</p>
+        <p className="mt-5 font-semibold">Kimi AI is reviewing this transfer…</p>
         <p className="mt-1 text-sm text-ink-700">
-          {force_ai
-            ? "Kimi is reasoning about contextual scam risk. This can take 25-30 seconds."
-            : "Running behavioral baseline and scam-signature rules."}
+          The model is reasoning about contextual scam risk. This can take 25-30 seconds.
         </p>
       </div>
     </div>
