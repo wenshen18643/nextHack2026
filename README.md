@@ -11,8 +11,9 @@ Built for **NexHack 2026** — Track 2: *Fintech Risk & Fraud Intelligence*.
 - [What it is](#what-it-is)
 - [Why it matters](#why-it-matters)
 - [How it works](#how-it-works)
+- [Install it (no setup)](#install-it-no-setup)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
+- [Run it locally (for developers)](#run-it-locally-for-developers)
 - [Usage](#usage)
   - [Run the demo](#run-the-demo)
   - [Call the screening API directly](#call-the-screening-api-directly)
@@ -64,13 +65,30 @@ Authorized-push-payment (APP) scams — fake investments, impersonation, "urgent
 
 The AI receives the entire transfer as JSON, so adding a new observed field automatically makes it part of the model's reasoning. Per-bank field selectors are the **only** thing that changes between banks, and they live in one file (`extension/site_adapters.js`).
 
+## Install it (no setup)
+
+The screening service is **already hosted** at [`next-hack2026.vercel.app`](https://next-hack2026.vercel.app/), so end users do **not** need Node, an API key, or a local server. They only load the extension into Chrome:
+
+1. **Download the extension folder.** Either clone the repo, or download it as a ZIP from GitHub (**Code → Download ZIP**) and unzip it. You only need the **`extension/`** folder.
+2. Open `chrome://extensions` in Chrome (or Edge / Brave).
+3. Toggle **Developer mode** on — top-right corner.
+4. Click **Load unpacked**.
+5. Select the **`extension/`** folder.
+6. Done — the 🛡️ Sentinel icon appears in your toolbar.
+
+To try it, open the live demo bank: **https://next-hack2026.vercel.app/demo-bank**, enter a suspicious transfer (e.g. recipient `Crypto Ventures`, amount `9000`, reference `urgent investment`), and click **Send money**. You'll see the AI warning before it "sends."
+
+> **Sharing it:** zip the `extension/` folder and send it. Whoever unzips it repeats steps 2–5 above. Because the backend is hosted, the zip works for them with zero configuration.
+
 ## Prerequisites
+
+You only need these to **run or modify the backend** — not to use the extension (see above).
 
 - **Node.js 18+** and npm
 - A **Chromium browser** (Chrome, Edge, or Brave) for the extension
 - An **OpenAI-compatible AI API key** — the demo is configured for [DeepSeek](https://platform.deepseek.com/), but Groq, Moonshot, or OpenAI work by changing three env values. Without a key the app still runs on the deterministic fallback.
 
-## Installation
+## Run it locally (for developers)
 
 ```bash
 # 1. Clone
@@ -88,17 +106,13 @@ cp .env.example .env
 npm run dev          # serves http://localhost:3000
 ```
 
-Then load the extension into your browser:
-
-1. Open `chrome://extensions`
-2. Enable **Developer mode** (top-right)
-3. Click **Load unpacked** and select the `extension/` folder
+Load the extension as in [Install it](#install-it-no-setup). To point it at your **local** server instead of the hosted one, change `default_api_base` in `extension/background.js` back to `http://localhost:3000`, or set `api_base` in `chrome.storage.sync`.
 
 ## Usage
 
 ### Run the demo
 
-1. With the server running, open **http://localhost:3000/demo-bank**
+1. Open the hosted demo bank: **https://next-hack2026.vercel.app/demo-bank** (or `http://localhost:3000/demo-bank` if running locally)
 2. Enter a suspicious transfer, e.g. recipient `Crypto Ventures`, amount `9000`, reference `urgent investment`
 3. Click **Send money**
 
@@ -109,7 +123,7 @@ You'll see a brief **"AI is checking…"** spinner, then a red **scam warning** 
 The extension is just a client of one endpoint. You can hit it yourself:
 
 ```bash
-curl -s http://localhost:3000/api/screen \
+curl -s https://next-hack2026.vercel.app/api/screen \
   -H "content-type: application/json" \
   -d '{"payee":"Crypto Ventures","amount":9000,"memo":"urgent investment guaranteed returns"}'
 ```

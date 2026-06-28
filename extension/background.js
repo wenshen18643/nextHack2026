@@ -4,7 +4,7 @@
  * mixed-content restrictions. The content script never fetches directly.
  */
 
-const default_api_base = "http://localhost:3000";
+const default_api_base = "https://next-hack2026.vercel.app";
 const screen_path = "/api/screen";
 
 /**
