@@ -1,83 +1,79 @@
-# Audit Ready
+# Sentinel Scam Shield
 
-A Next.js prototype built for **NexHack 2026** — focused on autonomous AI workflows for enterprise operations and fintech trust.
+A browser extension that **warns you before you send money to a likely scam** — built for **NexHack 2026** (Track 2: Fintech Risk & Fraud Intelligence).
 
-## Overview
+It intercepts the "Send" action on a supported bank or e-wallet page, hands the **full transfer context** to an AI, and shows a clear warning the instant something looks like a scam — all before the money moves.
 
-This project explores how AI can assist, automate, or intelligently coordinate real business workflows while remaining explainable, controllable, and realistic for adoption. It targets the hackathon's dual tracks:
+## How it works
 
-- **Track 1:** Agentic AI for Internal Enterprise Operations  
-- **Track 2:** Fintech Risk & Fraud Intelligence
-
-## Tech Stack
-
-- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Database / Auth:** Supabase
-- **Testing:** Vitest
-- **Utilities:** Zod, clsx, tailwind-merge, lucide-react
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- A Supabase project (for database/auth features)
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/wenshen18643/nextHack2026.git
-cd nextHack2026
-
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Then fill in your Supabase credentials and other secrets
-
-# Run the development server
-npm run dev
+```
+Bank page (Send clicked)
+   │  content script intercepts the click before it submits
+   ▼
+Extension background worker ──► POST /api/screen
+   ▼
+AI screener (full context: payee, amount, memo, channel, time)
+   ▼
+Verdict: allow → let it through   |   warn / block → show warning overlay
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **AI-first:** the AI receives the complete transfer and decides. Deterministic keyword rules exist only as a fallback for when the AI is unreachable, so a dead key never silently allows everything.
+- **No real money is touched.** The extension only *warns*; it cannot freeze a real bank transfer (no third party can). That is the honest, adoptable model.
 
-## Available Scripts
+## Tech stack
+
+- **Backend / demo app:** Next.js 14 (App Router), TypeScript
+- **Extension:** Chrome Manifest V3 (vanilla JS)
+- **AI:** any OpenAI-compatible chat API (configured for DeepSeek)
+- **Validation:** Zod · **Testing:** Vitest
+
+## Project structure
+
+```
+extension/            # The Chrome MV3 extension (load this unpacked)
+  manifest.json
+  content.js          # Intercepts the send click, shows spinner + warning
+  background.js       # Calls the screening API
+  site_adapters.js    # Per-bank field selectors (the only file to edit per bank)
+  overlay.css
+src/
+  app/api/screen/     # POST /api/screen — the screening endpoint (CORS)
+  app/demo-bank/      # A mock bank page to demo the extension safely
+  lib/screen/         # ai_screener (AI-first), service, cold_rules (fallback)
+  lib/risk/           # Shared scoring utilities (fusion, state machine, types)
+docs/                 # Hackathon requirements
+```
+
+## Getting started
+
+### 1. Run the screening server
+
+```bash
+npm install
+cp .env.example .env      # then set KIMI_API_KEY to a DeepSeek (or any OpenAI-compatible) key
+npm run dev               # http://localhost:3000
+```
+
+### 2. Load the extension
+
+1. Open `chrome://extensions` → enable **Developer mode**.
+2. Click **Load unpacked** → select the `extension/` folder.
+
+### 3. See it work
+
+Open `http://localhost:3000/demo-bank`, enter a transfer (e.g. recipient `Crypto Ventures`,
+amount `9000`, reference `urgent investment`), and click **Send money** — the shield intercepts
+it and shows a scam warning before it completes.
+
+## Scripts
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | Start the development server |
-| `npm run build` | Build the production app |
-| `npm run start` | Start the production server |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript checks |
-| `npm run db:seed` | Seed the database |
-| `npm test` | Run the test suite |
-
-## Project Structure
-
-```
-nextHack2026/
-├── docs/            # Requirements and planning documents
-├── public/          # Static assets
-├── src/             # Application source code
-│   ├── app/         # Next.js app router pages
-│   ├── components/  # Reusable React components
-│   ├── lib/         # Utilities, database, and shared logic
-│   └── ...
-├── .env             # Environment variables
-├── package.json
-└── README.md
-```
-
-## Philosophy
-
-- **Depth beats breadth** — one practical problem solved deeply > many shallow features.
-- **Build what the market will pay for** — solve painful problems that real organizations or fintechs would realistically adopt.
-- **Technical + business depth** — sound architecture, rational AI use, and a clear commercialization path.
+| `npm run dev` | Start the screening server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript check |
+| `npm test` | Vitest suite |
 
 ## License
 

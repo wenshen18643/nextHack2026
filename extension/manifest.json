@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Sentinel Scam Shield",
+  "version": "0.1.0",
+  "description": "Warns you before you send money to a likely scam, on supported bank and wallet websites.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*.maybank2u.com.my/*",
+    "https://*.cimbclicks.com.my/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:3000/demo-bank*",
+        "https://*.maybank2u.com.my/*",
+        "https://*.cimbclicks.com.my/*"
+      ],
+      "js": ["site_adapters.js", "content.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

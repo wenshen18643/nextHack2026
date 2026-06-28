@@ -3,9 +3,9 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sentinel — Behavioral Risk Firewall",
+  title: "Sentinel — Scam Shield",
   description:
-    "AI-driven eWallet fraud protection that intercepts high-risk transfers before money leaves the user.",
+    "A browser extension that warns users with AI before they send money to a likely scam.",
 };
 
 /**
@@ -23,14 +23,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 S
               </span>
               <span>Sentinel</span>
-              <span className="text-sm font-normal text-ink-700">Risk Firewall</span>
+              <span className="text-sm font-normal text-ink-700">Scam Shield</span>
             </Link>
             <nav className="flex gap-4 text-sm font-medium text-ink-700">
               <Link href="/" className="hover:text-brand-600">
-                eWallet
+                Home
               </Link>
-              <Link href="/ops" className="hover:text-brand-600">
-                Ops Dashboard
+              <Link href="/demo-bank" className="hover:text-brand-600">
+                Demo Bank
               </Link>
             </nav>
           </div>
