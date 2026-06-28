@@ -212,7 +212,6 @@ For a new bank adapter, include the field selectors and a note on how you confir
 ## Support
 
 - **Bugs / feature requests:** open a [GitHub issue](https://github.com/wenshen18643/nextHack2026/issues).
-- **Questions:** use [GitHub Discussions](https://github.com/wenshen18643/nextHack2026/discussions) or email `wenshen18643@gmail.com`.
 
 ## License
 
