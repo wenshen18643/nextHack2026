@@ -1,0 +1,103 @@
+.sentinel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.sentinel-card {
+  width: min(440px, calc(100vw - 32px));
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.35);
+  border-top: 6px solid var(--sentinel-accent);
+}
+
+.sentinel-warn {
+  --sentinel-accent: #f59e0b;
+}
+
+.sentinel-danger {
+  --sentinel-accent: #dc2626;
+}
+
+.sentinel-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  background: var(--sentinel-accent);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.sentinel-reason {
+  margin: 16px 0 24px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #0f172a;
+}
+
+.sentinel-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.sentinel-actions button {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.sentinel-cancel {
+  background: var(--sentinel-accent);
+  color: #ffffff;
+}
+
+.sentinel-proceed {
+  background: #ffffff;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.sentinel-spinner-card {
+  border-top-color: #2563eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 32px;
+}
+
+.sentinel-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 5px solid #dbeafe;
+  border-top-color: #2563eb;
+  animation: sentinel-spin 0.8s linear infinite;
+}
+
+.sentinel-checking {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+@keyframes sentinel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

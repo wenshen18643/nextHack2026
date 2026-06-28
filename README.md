@@ -1,84 +1,205 @@
-# Audit Ready
+# 🛡️ Sentinel Scam Shield
 
-A Next.js prototype built for **NexHack 2026** — focused on autonomous AI workflows for enterprise operations and fintech trust.
+> A browser extension that uses AI to warn people **before** they send money to a likely scam — reading the live transfer on their bank's page and flagging it the instant something looks wrong.
 
-## Overview
+Built for **NexHack 2026** — Track 2: *Fintech Risk & Fraud Intelligence*.
 
-This project explores how AI can assist, automate, or intelligently coordinate real business workflows while remaining explainable, controllable, and realistic for adoption. It targets the hackathon's dual tracks:
+---
 
-- **Track 1:** Agentic AI for Internal Enterprise Operations  
-- **Track 2:** Fintech Risk & Fraud Intelligence
+## Table of Contents
 
-## Tech Stack
+- [What it is](#what-it-is)
+- [Why it matters](#why-it-matters)
+- [How it works](#how-it-works)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Run the demo](#run-the-demo)
+  - [Call the screening API directly](#call-the-screening-api-directly)
+- [Configuration](#configuration)
+- [Project structure](#project-structure)
+- [Testing](#testing)
+- [Honest limitations](#honest-limitations)
+- [Contributing](#contributing)
+- [Support](#support)
+- [License](#license)
 
-- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Database / Auth:** Supabase
-- **Testing:** Vitest
-- **Utilities:** Zod, clsx, tailwind-merge, lucide-react
+---
 
-## Getting Started
+## What it is
 
-### Prerequisites
+Sentinel Scam Shield is a **Chrome (Manifest V3) extension** plus a small **Next.js screening service**. When a user is about to send money on a supported bank or e-wallet website, the extension:
 
-- Node.js 18+
-- A Supabase project (for database/auth features)
+1. **Intercepts** the "Send" click before it submits,
+2. Sends the **complete transfer context** (recipient, amount, reference/memo) to an AI,
+3. Shows a clear **warning overlay** if the transfer looks like a scam — so the user can cancel before the money leaves.
 
-### Installation
+It is **AI-first**: the AI sees the whole transfer and makes the call. A small set of deterministic keyword rules exists only as a fallback for when the AI is unreachable, so a dead API key never silently waves everything through.
+
+## Why it matters
+
+Authorized-push-payment (APP) scams — fake investments, impersonation, "urgent" transfers — cost Malaysians hundreds of millions a year. The money is gone the moment the victim hits send. Sentinel inserts a **last-second, context-aware warning** at exactly that moment, on the bank pages people already use, with **no integration required from the bank**.
+
+## How it works
+
+```
+┌───────────────────────────────────────────────────────────┐
+│  Bank / wallet website  (CIMB Clicks, or the demo bank)    │
+│  user clicks “Send money”                                  │
+└─────────────────┬─────────────────────────────────────────┘
+                  │  content.js intercepts the click (capture phase)
+                  │  reads payee / amount / memo via a per-bank adapter
+                  ▼
+          ┌───────────────┐        ┌──────────────────────────────┐
+          │ background.js │ ─────▶ │  Next.js  POST /api/screen     │
+          └───────────────┘        │   ├─ ai_screener  (AI-first)   │ → DeepSeek
+                  ▲                 │   └─ cold_rules   (fallback)   │
+                  │                 └──────────────┬───────────────┘
+                  │  verdict: allow | warn | block │
+                  ◀────────────────────────────────┘
+                  │
+   allow ───────▶ let the transfer proceed untouched
+   warn / block ▶ show warning overlay → user cancels or proceeds
+```
+
+The AI receives the entire transfer as JSON, so adding a new observed field automatically makes it part of the model's reasoning. Per-bank field selectors are the **only** thing that changes between banks, and they live in one file (`extension/site_adapters.js`).
+
+## Prerequisites
+
+- **Node.js 18+** and npm
+- A **Chromium browser** (Chrome, Edge, or Brave) for the extension
+- An **OpenAI-compatible AI API key** — the demo is configured for [DeepSeek](https://platform.deepseek.com/), but Groq, Moonshot, or OpenAI work by changing three env values. Without a key the app still runs on the deterministic fallback.
+
+## Installation
 
 ```bash
-# Clone the repository
+# 1. Clone
 git clone https://github.com/wenshen18643/nextHack2026.git
 cd nextHack2026
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Set up environment variables
-cp .env.example .env.local
-# Then fill in your Supabase credentials and other secrets
+# 3. Configure the AI provider
+cp .env.example .env
+#   then open .env and set KIMI_API_KEY to your DeepSeek (or other) key
 
-# Run the development server
-npm run dev
+# 4. Start the screening server
+npm run dev          # serves http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Then load the extension into your browser:
 
-## Available Scripts
+1. Open `chrome://extensions`
+2. Enable **Developer mode** (top-right)
+3. Click **Load unpacked** and select the `extension/` folder
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start the development server |
-| `npm run build` | Build the production app |
-| `npm run start` | Start the production server |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run TypeScript checks |
-| `npm run db:seed` | Seed the database |
-| `npm test` | Run the test suite |
+## Usage
 
-## Project Structure
+### Run the demo
 
-```
-nextHack2026/
-├── docs/            # Requirements and planning documents
-├── public/          # Static assets
-├── src/             # Application source code
-│   ├── app/         # Next.js app router pages
-│   ├── components/  # Reusable React components
-│   ├── lib/         # Utilities, database, and shared logic
-│   └── ...
-├── .env             # Environment variables
-├── package.json
-└── README.md
+1. With the server running, open **http://localhost:3000/demo-bank**
+2. Enter a suspicious transfer, e.g. recipient `Crypto Ventures`, amount `9000`, reference `urgent investment`
+3. Click **Send money**
+
+You'll see a brief **"AI is checking…"** spinner, then a red **scam warning** with the AI's reasoning — before the transfer "completes." A normal transfer (e.g. `Mak Cik Nasi Lemak`, `12`, `breakfast`) passes straight through.
+
+### Call the screening API directly
+
+The extension is just a client of one endpoint. You can hit it yourself:
+
+```bash
+curl -s http://localhost:3000/api/screen \
+  -H "content-type: application/json" \
+  -d '{"payee":"Crypto Ventures","amount":9000,"memo":"urgent investment guaranteed returns"}'
 ```
 
-## Philosophy
+Example response:
 
-- **Depth beats breadth** — one practical problem solved deeply > many shallow features.
-- **Build what the market will pay for** — solve painful problems that real organizations or fintechs would realistically adopt.
-- **Technical + business depth** — sound architecture, rational AI use, and a clear commercialization path.
+```json
+{
+  "advice": "block",
+  "score": 88,
+  "reason": "The large amount combined with guaranteed-returns investment language matches a common Malaysian scam pattern.",
+  "signals": [],
+  "ai_used": true
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `advice` | `allow` (let it through), `warn`, or `block` |
+| `score` | Risk score `0–100` |
+| `reason` | One-sentence explanation shown to the user |
+| `ai_used` | `true` if the AI decided, `false` if the fallback rules did |
+
+## Configuration
+
+All configuration is environment variables in `.env` (see `.env.example`). The AI variables are named `KIMI_*` for historical reasons but point at **any** OpenAI-compatible provider:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `KIMI_API_KEY` | API key for the AI provider | `sk-...` |
+| `KIMI_BASE_URL` | Provider base URL | `https://api.deepseek.com` |
+| `KIMI_MODEL` | Model name | `deepseek-chat` |
+| `KIMI_TEMPERATURE` | Sampling temperature (keep low for reliable JSON) | `0.2` |
+
+To support a new bank, add an adapter to **`extension/site_adapters.js`** (its CSS selectors for the recipient field, amount field, and send button) and add the bank's domain to `extension/manifest.json`.
+
+## Project structure
+
+```
+extension/                 # Chrome MV3 extension (load this unpacked)
+  manifest.json            #   permissions + which sites to run on
+  content.js               #   intercepts the send click, spinner + warning overlay
+  background.js            #   calls the screening API
+  site_adapters.js         #   per-bank field selectors (the only per-bank file)
+  overlay.css              #   warning + spinner styles
+src/
+  app/api/screen/route.ts  # POST /api/screen — the screening endpoint (CORS-enabled)
+  app/demo-bank/page.tsx   # a mock bank page for safe demos
+  app/page.tsx             # landing page
+  lib/screen/
+    ai_screener.ts         #   AI-first screener (full-context prompt)
+    service.ts             #   orchestration + fallback
+    cold_rules.ts          #   deterministic keyword fallback
+  lib/risk/                # shared scoring utilities (types, fusion, state machine)
+docs/                      # hackathon requirements
+```
+
+## Testing
+
+```bash
+npm test          # Vitest unit tests
+npm run typecheck # TypeScript, no emit
+npm run lint      # ESLint (next lint)
+npm run build     # production build
+```
+
+## Honest limitations
+
+These are deliberate, and worth stating plainly:
+
+- **It warns, it does not freeze.** No third party can stop another bank's transfer; doing so needs a banking license. Sentinel only advises — which is what makes it adoptable without regulatory approval.
+- **It works on bank *websites*, not app-only wallets.** A browser extension can reach Maybank2u or CIMB Clicks on the web, but not the Touch 'n Go app. App coverage would need a separate Android accessibility build.
+- **No transaction history.** On a real bank page the extension sees only the current transfer, so it does scam-pattern detection on that transfer rather than behavioral profiling — which is exactly what catches APP scams.
+- **Demo-grade extension.** Bank pages change their markup and have anti-tampering defenses; the production model is an API a bank embeds, not a sideloaded extension.
+
+## Contributing
+
+Contributions are welcome:
+
+1. Fork the repo and create a feature branch (`git checkout -b feat/my-change`).
+2. Make your change; ensure `npm run typecheck`, `npm run lint`, and `npm test` all pass.
+3. Open a pull request describing the change and how you verified it.
+
+For a new bank adapter, include the field selectors and a note on how you confirmed them.
+
+## Support
+
+- **Bugs / feature requests:** open a [GitHub issue](https://github.com/wenshen18643/nextHack2026/issues).
+- **Questions:** use [GitHub Discussions](https://github.com/wenshen18643/nextHack2026/discussions) or email `wenshen18643@gmail.com`.
 
 ## License
 
-MIT
+Released under the [MIT License](./LICENSE).
