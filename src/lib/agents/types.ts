@@ -14,8 +14,12 @@ export type AgentName = "risk" | "behaviour" | "anomaly";
  * @property amount      Transfer amount in the account currency.
  * @property currency    ISO-like currency code, defaulted upstream.
  * @property memo        Optional reference/description the user typed.
- * @property channel     Where the transfer was observed (e.g. browser_extension).
- * @property observed_at ISO timestamp when the transfer was intercepted.
+ * @property channel          Where the transfer was observed (e.g. browser_extension).
+ * @property observed_at      ISO timestamp when the transfer was intercepted.
+ * @property prior_flag_count How many earlier transfers to this same recipient
+ *                            were flagged (advice 'warn' or 'block'). Enriched
+ *                            from history before fan-out so every agent and the
+ *                            AI adjudicator can weight a repeat offender.
  */
 export interface TransferContext {
   payee: string;
@@ -24,6 +28,7 @@ export interface TransferContext {
   memo?: string;
   channel: string;
   observed_at: string;
+  prior_flag_count?: number;
 }
 
 /**

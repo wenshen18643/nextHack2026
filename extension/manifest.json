@@ -7,7 +7,6 @@
   "host_permissions": [
     "http://localhost:3000/*",
     "https://next-hack2026.vercel.app/*",
-    "https://*.maybank2u.com.my/*",
     "https://*.cimbclicks.com.my/*"
   ],
   "background": {
@@ -18,7 +17,6 @@
       "matches": [
         "http://localhost:3000/demo-bank*",
         "https://next-hack2026.vercel.app/demo-bank*",
-        "https://*.maybank2u.com.my/*",
         "https://*.cimbclicks.com.my/*"
       ],
       "js": ["site_adapters.js", "content.js"],

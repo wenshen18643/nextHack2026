@@ -24,6 +24,7 @@ export interface ScreenContext {
   memo?: string;
   channel: string;
   observed_at: string;
+  prior_flag_count?: number;
 }
 
 /**
@@ -40,11 +41,12 @@ export interface AiScreenVerdict {
 }
 
 const system_prompt = [
-  "You are a fraud-screening AI for Malaysian bank and e-wallet transfers (DuitNow, Touch 'n Go, Maybank, CIMB).",
+  "You are a fraud-screening AI for Malaysian bank and e-wallet transfers (DuitNow, Touch 'n Go, CIMB).",
   "You receive the COMPLETE context of a single outbound transfer as JSON and must judge scam/fraud risk before the user sends it.",
   "Weigh everything holistically: recipient name or account, amount, the reference/memo text, the channel, and timing.",
   "Account for Malaysian scam patterns: fake investments, crypto, loan and prize scams, romance/impersonation, mule accounts, and any wording that signals the user was coached or is paying a stranger.",
   "Treat self-incriminating memo text (e.g. naming the recipient a scammer) as a strong risk signal, not a joke.",
+  "When prior_flag_count is present and greater than zero, this exact recipient was flagged as suspicious on earlier transfers; treat that as a strong risk signal that compounds with the rest.",
   "Output ONLY a raw JSON object, no markdown and no code fences: {\"risk_score\":0-100,\"advice\":\"allow|warn|block\",\"reason\":string}.",
   "Use allow for risk_score<30, warn for 30-69, block for 70+. Keep reason to one plain sentence the sender will read.",
 ].join(" ");

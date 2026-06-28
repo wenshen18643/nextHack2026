@@ -27,9 +27,12 @@ create index if not exists transfers_created_at_idx on public.transfers (created
 -- RLS) may read or write; no anon/public policy is created on purpose.
 alter table public.transfers enable row level security;
 
--- Behaviour agent input: this recipient's prior-transfer history.
+-- Behaviour agent input: this recipient's prior-transfer history, including how
+-- many earlier transfers to the same recipient were themselves flagged
+-- (advice 'warn' or 'block'). Dropped first because the return shape changed.
+drop function if exists public.get_behaviour_stats(text);
 create or replace function public.get_behaviour_stats(p_payee_key text)
-returns table (payee_count bigint, payee_avg_amount numeric)
+returns table (payee_count bigint, payee_avg_amount numeric, prior_flag_count bigint)
 language sql
 stable
 security definer
@@ -37,7 +40,8 @@ set search_path = public
 as $$
   select
     count(*)::bigint as payee_count,
-    coalesce(avg(amount), 0) as payee_avg_amount
+    coalesce(avg(amount), 0) as payee_avg_amount,
+    count(*) filter (where advice in ('warn', 'block'))::bigint as prior_flag_count
   from public.transfers
   where payee_key = p_payee_key;
 $$;

@@ -195,7 +195,7 @@ npm run build     # production build
 These are deliberate, and worth stating plainly:
 
 - **It warns, it does not freeze.** No third party can stop another bank's transfer; doing so needs a banking license. Sentinel only advises — which is what makes it adoptable without regulatory approval.
-- **It works on bank *websites*, not app-only wallets.** A browser extension can reach Maybank2u or CIMB Clicks on the web, but not the Touch 'n Go app. App coverage would need a separate Android accessibility build.
+- **It works on bank *websites*, not app-only wallets.** A browser extension can reach CIMB Clicks on the web, but not the Touch 'n Go app. App coverage would need a separate Android accessibility build.
 - **No transaction history.** On a real bank page the extension sees only the current transfer, so it does scam-pattern detection on that transfer rather than behavioral profiling — which is exactly what catches APP scams.
 - **Demo-grade extension.** Bank pages change their markup and have anti-tampering defenses; the production model is an API a bank embeds, not a sideloaded extension.
 

@@ -5,7 +5,11 @@ import { ai_screen_transfer } from "@/lib/screen/ai_screener";
 import { insert_transfer_record } from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
 import { run_risk_agent } from "./risk_agent";
-import { normalize_payee_key, run_behaviour_agent } from "./behaviour_agent";
+import {
+  fetch_behaviour_stats,
+  normalize_payee_key,
+  run_behaviour_agent,
+} from "./behaviour_agent";
 import { run_anomaly_agent } from "./anomaly_agent";
 import type { AgentReport, TransferContext } from "./types";
 
@@ -92,11 +96,17 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
     memo: context.memo ?? "",
   });
 
+  const behaviour_stats = await fetch_behaviour_stats(context);
+  const enriched_context: TransferContext = {
+    ...context,
+    prior_flag_count: behaviour_stats?.prior_flag_count ?? 0,
+  };
+
   const [risk_report, behaviour_report, anomaly_report, ai_verdict] = await Promise.all([
-    run_risk_agent(context),
-    run_behaviour_agent(context),
-    run_anomaly_agent(context),
-    ai_screen_transfer(context),
+    run_risk_agent(enriched_context),
+    run_behaviour_agent(enriched_context, behaviour_stats),
+    run_anomaly_agent(enriched_context),
+    ai_screen_transfer(enriched_context),
   ]);
 
   const ai_signal: RiskSignal | null = ai_verdict
