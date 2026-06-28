@@ -1,5 +1,6 @@
 import type { RiskSignal } from "@/lib/risk/types";
 import { call_supabase_rpc } from "@/lib/db/supabase_client";
+import { log_event, summarize_signals } from "@/lib/observability/logging";
 import type { AgentReport, TransferContext } from "./types";
 
 const new_payee_weight = 18;
@@ -87,6 +88,9 @@ export async function run_behaviour_agent(context: TransferContext): Promise<Age
   });
   const raw = rows?.[0];
   if (!raw) {
+    log_event("behaviour-agent", "no history available — contributing no signals", {
+      payee_key: normalize_payee_key(context.payee),
+    });
     return { agent: "behaviour", signals: [] };
   }
 
@@ -94,5 +98,12 @@ export async function run_behaviour_agent(context: TransferContext): Promise<Age
     payee_count: Number(raw.payee_count),
     payee_avg_amount: Number(raw.payee_avg_amount),
   };
-  return { agent: "behaviour", signals: score_behaviour(context, stats) };
+  const signals = score_behaviour(context, stats);
+  log_event("behaviour-agent", "scored recipient history", {
+    payee_key: normalize_payee_key(context.payee),
+    payee_count: stats.payee_count,
+    payee_avg_amount: Math.round(stats.payee_avg_amount),
+    signals: summarize_signals(signals),
+  });
+  return { agent: "behaviour", signals };
 }

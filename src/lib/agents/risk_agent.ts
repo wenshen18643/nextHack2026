@@ -1,4 +1,5 @@
 import { score_cold_rules, type ColdTransfer } from "@/lib/screen/cold_rules";
+import { log_event, summarize_signals } from "@/lib/observability/logging";
 import type { AgentReport, TransferContext } from "./types";
 
 /**
@@ -18,5 +19,7 @@ export async function run_risk_agent(context: TransferContext): Promise<AgentRep
     amount: context.amount,
     memo: context.memo,
   };
-  return { agent: "risk", signals: score_cold_rules(transfer) };
+  const signals = score_cold_rules(transfer);
+  log_event("risk-agent", "scored history-free rules", { signals: summarize_signals(signals) });
+  return { agent: "risk", signals };
 }

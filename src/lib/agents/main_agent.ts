@@ -3,6 +3,7 @@ import { fuse_risk_score, summarize_reason } from "@/lib/risk/fusion";
 import { derive_firewall_state } from "@/lib/risk/state_machine";
 import { ai_screen_transfer } from "@/lib/screen/ai_screener";
 import { insert_transfer_record } from "@/lib/db/supabase_client";
+import { log_event, summarize_signals } from "@/lib/observability/logging";
 import { run_risk_agent } from "./risk_agent";
 import { normalize_payee_key, run_behaviour_agent } from "./behaviour_agent";
 import { run_anomaly_agent } from "./anomaly_agent";
@@ -84,6 +85,13 @@ async function log_screened_transfer(
  * @returns The fused advice, score, state, reason, and per-agent breakdown.
  */
 export async function run_main_agent(context: TransferContext): Promise<MainAgentResult> {
+  log_event("main-agent", "screening transfer", {
+    payee: context.payee,
+    amount: context.amount,
+    currency: context.currency,
+    memo: context.memo ?? "",
+  });
+
   const [risk_report, behaviour_report, anomaly_report, ai_verdict] = await Promise.all([
     run_risk_agent(context),
     run_behaviour_agent(context),
@@ -100,6 +108,13 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
       }
     : null;
 
+  log_event("main-agent", "agents reported", {
+    risk: summarize_signals(risk_report.signals),
+    behaviour: summarize_signals(behaviour_report.signals),
+    anomaly: summarize_signals(anomaly_report.signals),
+    ai: ai_signal ? `AI_HOLISTIC(${ai_signal.weight})` : "unavailable",
+  });
+
   const agents = [risk_report, behaviour_report, anomaly_report];
   const signals = [
     ...risk_report.signals,
@@ -112,6 +127,14 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
   const state = derive_firewall_state(score);
   const advice = derive_advice_from_state(state);
   const reason = ai_verdict?.reason ?? summarize_reason(signals);
+
+  log_event("main-agent", "verdict", {
+    score,
+    state,
+    advice,
+    ai_used: ai_signal !== null,
+    reason,
+  });
 
   await log_screened_transfer(context, advice, score, state);
 

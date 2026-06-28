@@ -1,5 +1,6 @@
 import type { RiskSignal } from "@/lib/risk/types";
 import { call_supabase_rpc } from "@/lib/db/supabase_client";
+import { log_event, summarize_signals } from "@/lib/observability/logging";
 import type { AgentReport, TransferContext } from "./types";
 
 const outlier_sigma = 2;
@@ -77,6 +78,7 @@ export async function run_anomaly_agent(context: TransferContext): Promise<Agent
   });
   const raw = rows?.[0];
   if (!raw) {
+    log_event("anomaly-agent", "no population stats available — contributing no signals");
     return { agent: "anomaly", signals: [] };
   }
 
@@ -85,5 +87,12 @@ export async function run_anomaly_agent(context: TransferContext): Promise<Agent
     population_stddev: Number(raw.population_stddev),
     recent_count: Number(raw.recent_count),
   };
-  return { agent: "anomaly", signals: score_anomaly(context, stats) };
+  const signals = score_anomaly(context, stats);
+  log_event("anomaly-agent", "scored population stats", {
+    population_mean: Math.round(stats.population_mean),
+    population_stddev: Math.round(stats.population_stddev),
+    recent_count: stats.recent_count,
+    signals: summarize_signals(signals),
+  });
+  return { agent: "anomaly", signals };
 }

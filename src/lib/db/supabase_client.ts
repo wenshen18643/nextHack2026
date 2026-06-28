@@ -79,6 +79,7 @@ export async function call_supabase_rpc<TResult>(
       return null;
     }
 
+    console.log(`[supabase] rpc ${function_name} ok`);
     return (await response.json()) as TResult;
   } catch (error) {
     console.error(`[supabase] rpc ${function_name} failed — skipping:`, error);
@@ -107,12 +108,17 @@ export async function insert_transfer_record(row: Record<string, unknown>): Prom
   const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
 
   try {
-    await fetch(`${config.url}/rest/v1/transfers`, {
+    const response = await fetch(`${config.url}/rest/v1/transfers`, {
       method: "POST",
       signal: controller.signal,
       headers: { ...build_auth_headers(config.key), prefer: "return=minimal" },
       body: JSON.stringify(row),
     });
+    if (response.ok) {
+      console.log(`[supabase] logged transfer payee="${row.payee}" amount=${row.amount}`);
+    } else {
+      console.warn(`[supabase] log transfer HTTP ${response.status} — continuing.`);
+    }
   } catch (error) {
     console.error("[supabase] failed to log transfer — continuing:", error);
   } finally {
