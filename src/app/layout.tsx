@@ -85,6 +85,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/#pricing" className="transition-colors hover:text-brand-600">
                 Pricing
               </Link>
+              <Link href="/business-case" className="transition-colors hover:text-brand-600">
+                Business Case
+              </Link>
               <Link href="/demo-bank" className="transition-colors hover:text-brand-600">
                 Demo Bank
               </Link>
