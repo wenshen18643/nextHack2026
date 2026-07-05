@@ -1,13 +1,32 @@
 {
   "manifest_version": 3,
   "name": "Sentinel Scam Shield",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Warns you before you send money to a likely scam, on supported bank and wallet websites.",
   "permissions": ["storage"],
   "host_permissions": [
     "http://localhost:3000/*",
     "https://next-hack2026.vercel.app/*",
-    "https://*.cimbclicks.com.my/*"
+    "https://*.cimbclicks.com.my/*",
+    "https://*.maybank2u.com.my/*",
+    "https://*.pbebank.com/*",
+    "https://*.rhbgroup.com/*",
+    "https://*.rhb.com.my/*",
+    "https://*.hongleongconnect.my/*",
+    "https://*.bankislam.biz/*",
+    "https://*.amonline.com.my/*",
+    "https://*.mybsn.com.my/*",
+    "https://*.affinalways.com/*",
+    "https://*.allianceonline.com.my/*",
+    "https://*.irakyat.com.my/*",
+    "https://*.i-muamalat.com.my/*",
+    "https://*.agrobank.com.my/*",
+    "https://*.mbsbbank.com/*",
+    "https://*.uob.com.my/*",
+    "https://*.ocbc.com.my/*",
+    "https://*.hsbc.com.my/*",
+    "https://retail.sc.com/*",
+    "https://*.tngdigital.com.my/*"
   ],
   "action": {
     "default_popup": "popup.html"
@@ -20,11 +39,31 @@
       "matches": [
         "http://localhost:3000/demo-bank*",
         "https://next-hack2026.vercel.app/demo-bank*",
-        "https://*.cimbclicks.com.my/*"
+        "https://*.cimbclicks.com.my/*",
+        "https://*.maybank2u.com.my/*",
+        "https://*.pbebank.com/*",
+        "https://*.rhbgroup.com/*",
+        "https://*.rhb.com.my/*",
+        "https://*.hongleongconnect.my/*",
+        "https://*.bankislam.biz/*",
+        "https://*.amonline.com.my/*",
+        "https://*.mybsn.com.my/*",
+        "https://*.affinalways.com/*",
+        "https://*.allianceonline.com.my/*",
+        "https://*.irakyat.com.my/*",
+        "https://*.i-muamalat.com.my/*",
+        "https://*.agrobank.com.my/*",
+        "https://*.mbsbbank.com/*",
+        "https://*.uob.com.my/*",
+        "https://*.ocbc.com.my/*",
+        "https://*.hsbc.com.my/*",
+        "https://retail.sc.com/*",
+        "https://*.tngdigital.com.my/*"
       ],
       "js": ["site_adapters.js", "content.js"],
       "css": ["overlay.css"],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ]
 }

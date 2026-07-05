@@ -31,6 +31,9 @@ const payee_review_labels = [
   "account holder name",
   "pay to",
   "payee",
+  "penerima",
+  "nama penerima",
+  "pindah kepada",
 ];
 const amount_review_labels = [
   "amount",
@@ -38,6 +41,9 @@ const amount_review_labels = [
   "payment amount",
   "total amount",
   "total",
+  "amaun",
+  "jumlah",
+  "jumlah pindahan",
 ];
 const memo_review_labels = [
   "reference",
@@ -48,6 +54,10 @@ const memo_review_labels = [
   "description",
   "memo",
   "note",
+  "rujukan",
+  "rujukan penerima",
+  "butiran",
+  "keterangan",
 ];
 const all_review_labels = new Set([
   ...payee_review_labels,
@@ -56,8 +66,9 @@ const all_review_labels = new Set([
 ]);
 const max_review_value_length = 160;
 const ringgit_amount_pattern = /(?:RM|MYR)\s*([0-9][\d,]*(?:\.\d{1,2})?)/gi;
-const send_button_text_pattern = /\b(confirm|transfer|send|proceed|pay|agree)\b/i;
-const blocked_button_text_pattern = /\b(back|cancel|edit|add|save)\b/i;
+const send_button_text_pattern =
+  /\b(confirm|transfer|send|proceed|pay|agree|sahkan|hantar|bayar|teruskan|pindah)\b/i;
+const blocked_button_text_pattern = /\b(back|cancel|edit|add|save|batal|kembali)\b/i;
 
 /**
  * Lowercases, collapses whitespace, and strips trailing colons/asterisks so
@@ -186,7 +197,19 @@ const generic_adapter = {
     return send_button_text_pattern.test(label) && !blocked_button_text_pattern.test(label);
   },
   read_transfer() {
-    return read_transfer_from_review_page();
+    const form_reading = read_transfer_from_form_inputs();
+    if (form_reading.payee && Number.isFinite(form_reading.amount) && form_reading.amount > 0) {
+      return form_reading;
+    }
+    const review_reading = read_transfer_from_review_page();
+    return {
+      payee: form_reading.payee || review_reading.payee,
+      amount:
+        Number.isFinite(form_reading.amount) && form_reading.amount > 0
+          ? form_reading.amount
+          : review_reading.amount,
+      memo: form_reading.memo || review_reading.memo,
+    };
   },
 };
 
@@ -255,12 +278,13 @@ const demo_adapter = {
 
 const adapters_by_host = {
   "localhost": demo_adapter,
-  "www.cimbclicks.com.my": cimb_adapter,
+  "cimbclicks.com.my": cimb_adapter,
 };
 
 /**
- * Resolves the adapter for the current host, falling back to the heuristic
- * adapter so unconfigured banks degrade gracefully rather than failing closed.
+ * Resolves the adapter for the current host by exact or parent-domain match,
+ * so "www." and login-subdomain variants share one adapter entry. Unmatched
+ * hosts fall back to the generic adapter rather than failing closed.
  * @param {boolean} use_site_adapters When false, hand-written adapters are
  *   bypassed and the generic adapter is used everywhere, which lets the
  *   generic reader be exercised on hosts that normally have a precise adapter.
@@ -270,7 +294,11 @@ function resolve_site_adapter(use_site_adapters) {
   if (!use_site_adapters) {
     return generic_adapter;
   }
-  return adapters_by_host[window.location.hostname] ?? generic_adapter;
+  const host = window.location.hostname;
+  const matched_domain = Object.keys(adapters_by_host).find(
+    (domain) => host === domain || host.endsWith(`.${domain}`),
+  );
+  return matched_domain ? adapters_by_host[matched_domain] : generic_adapter;
 }
 
 window.__sentinel_resolve_adapter = resolve_site_adapter;

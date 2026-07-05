@@ -187,5 +187,43 @@
     button.removeAttribute(bypass_attribute);
   }
 
+  /**
+   * Capture-phase handler for form submits, covering transfers sent by
+   * pressing Enter rather than clicking a button. Submits triggered by an
+   * already-screened button are let through so a transfer is never screened
+   * twice.
+   * @param {SubmitEvent} event
+   */
+  async function handle_form_submit(event) {
+    const form = event.target;
+    if (
+      !(form instanceof HTMLFormElement) ||
+      form.hasAttribute(bypass_attribute) ||
+      event.submitter?.hasAttribute(bypass_attribute)
+    ) {
+      return;
+    }
+
+    const transfer = adapter.read_transfer();
+    if (!transfer.payee || !Number.isFinite(transfer.amount) || transfer.amount <= 0) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    console.log("[sentinel] transfer intercepted via form submit:", transfer);
+    show_spinner();
+    const started_at = Date.now();
+    const result = await request_screening(transfer);
+    await enforce_minimum_spinner(started_at);
+    clear_spinner();
+    if (result.advice === "allow" || (await show_warning(result))) {
+      form.setAttribute(bypass_attribute, "true");
+      form.requestSubmit();
+      form.removeAttribute(bypass_attribute);
+    }
+  }
+
   document.addEventListener("click", handle_send_click, true);
+  document.addEventListener("submit", handle_form_submit, true);
 })();
