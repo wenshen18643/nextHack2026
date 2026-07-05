@@ -66,3 +66,17 @@ $$;
 
 grant execute on function public.get_behaviour_stats(text) to service_role;
 grant execute on function public.get_anomaly_stats(integer) to service_role;
+
+-- Latest captured DOM snapshot per bank site/frame, used to write precise
+-- site adapters. Upserted on (site, frame_slug) so only the newest dump per
+-- page is kept. Service-role only, same as transfers.
+create table if not exists public.dom_dumps (
+  site text not null,
+  frame_slug text not null default '',
+  host text not null,
+  html text not null,
+  captured_at timestamptz not null default now(),
+  primary key (site, frame_slug)
+);
+
+alter table public.dom_dumps enable row level security;

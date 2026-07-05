@@ -98,6 +98,52 @@ export async function call_supabase_rpc<TResult>(
  *
  * @param row The transfer record to append to the `transfers` table.
  */
+/**
+ * Upserts one captured page snapshot into the `dom_dumps` table, keyed on
+ * (site, frame_slug) so each site/frame keeps only its latest dump.
+ *
+ * @param row The dump to store: site name, frame slug, source host, and HTML.
+ * @returns True when the upsert succeeded, false otherwise.
+ */
+export async function upsert_dom_dump(row: {
+  site: string;
+  frame_slug: string;
+  host: string;
+  html: string;
+}): Promise<boolean> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return false;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const response = await fetch(
+      `${config.url}/rest/v1/dom_dumps?on_conflict=site,frame_slug`,
+      {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          ...build_auth_headers(config.key),
+          prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify({ ...row, captured_at: new Date().toISOString() }),
+      },
+    );
+    if (!response.ok) {
+      console.warn(`[supabase] dom dump upsert HTTP ${response.status}.`);
+    }
+    return response.ok;
+  } catch (error) {
+    console.error("[supabase] dom dump upsert failed:", error);
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function insert_transfer_record(row: Record<string, unknown>): Promise<void> {
   const config = resolve_supabase_config();
   if (!config) {

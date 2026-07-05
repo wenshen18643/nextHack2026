@@ -1,9 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { upsert_dom_dump } from "@/lib/db/supabase_client";
 
 const dump_directory = path.join(process.cwd(), "docs", "dom_dumps");
-const max_dump_bytes = 8_000_000;
+const max_dump_bytes = 4_000_000;
 const max_frame_slug_length = 40;
 
 const site_names_by_host_suffix: Record<string, string> = {
@@ -49,41 +50,58 @@ function resolve_site_name(host: string): string {
 }
 
 /**
- * Builds the dump filename: `<site>.html` for the top frame, or
- * `<site>__<frame-slug>.html` for an iframe so frames never clobber each other.
+ * Reduces an iframe pathname to a short slug used to keep frame dumps from
+ * clobbering the top-frame dump. The top frame yields an empty slug.
  *
- * @param host       The dumping frame's hostname.
  * @param frame_path The iframe pathname, or an empty string for the top frame.
- * @returns The filename to write inside the dump directory.
+ * @returns A filesystem-safe slug, empty for the top frame.
  */
-function build_dump_filename(host: string, frame_path: string): string {
-  const site = resolve_site_name(host);
+function build_frame_slug(frame_path: string): string {
   if (!frame_path) {
-    return `${site}.html`;
+    return "";
   }
-  const slug =
+  return (
     frame_path
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, max_frame_slug_length) || "frame";
-  return `${site}__${slug}.html`;
+      .slice(0, max_frame_slug_length) || "frame"
+  );
 }
 
 /**
- * Receives a DOM snapshot from the extension and writes it to
- * `docs/dom_dumps/`, overwriting any previous dump for the same site/frame.
- * Development-only: disabled in production so the deployed API can never be
- * used as an arbitrary file writer.
+ * Writes the dump to docs/dom_dumps/ when running on a local dev machine.
+ * Best-effort: the serverless filesystem is read-only, so failures are logged
+ * and ignored.
+ *
+ * @param site       The resolved site name.
+ * @param frame_slug The frame slug, empty for the top frame.
+ * @param html       The captured page HTML.
+ */
+async function write_local_dump_file(
+  site: string,
+  frame_slug: string,
+  html: string,
+): Promise<void> {
+  const filename = frame_slug ? `${site}__${frame_slug}.html` : `${site}.html`;
+  try {
+    await mkdir(dump_directory, { recursive: true });
+    await writeFile(path.join(dump_directory, filename), html, "utf8");
+    console.log(`[dom-dump] saved ${filename} (${html.length} bytes)`);
+  } catch (error) {
+    console.warn("[dom-dump] local file write skipped:", error);
+  }
+}
+
+/**
+ * Receives a DOM snapshot from the extension and stores it: upserted into the
+ * Supabase `dom_dumps` table (works on Vercel) and, in local development,
+ * also written to docs/dom_dumps/ for direct inspection.
  *
  * @param request JSON body `{ host, frame_path, html }`.
- * @returns 200 with the saved filename, or an error status.
+ * @returns 200 with the stored site/frame identifiers, or an error status.
  */
 export async function POST(request: Request): Promise<NextResponse> {
-  if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "not available" }, { status: 404 });
-  }
-
   let body: { host?: unknown; frame_path?: unknown; html?: unknown };
   try {
     body = await request.json();
@@ -99,10 +117,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "dump too large" }, { status: 413 });
   }
 
-  const filename = build_dump_filename(host, typeof frame_path === "string" ? frame_path : "");
-  await mkdir(dump_directory, { recursive: true });
-  await writeFile(path.join(dump_directory, filename), html, "utf8");
+  const site = resolve_site_name(host);
+  const frame_slug = build_frame_slug(typeof frame_path === "string" ? frame_path : "");
 
-  console.log(`[dom-dump] saved ${filename} (${html.length} bytes) from ${host}`);
-  return NextResponse.json({ saved: filename });
+  const stored_in_db = await upsert_dom_dump({ site, frame_slug, host, html });
+  if (process.env.NODE_ENV === "development") {
+    await write_local_dump_file(site, frame_slug, html);
+  } else if (!stored_in_db) {
+    return NextResponse.json({ error: "storage unavailable" }, { status: 503 });
+  }
+
+  return NextResponse.json({ saved: frame_slug ? `${site}__${frame_slug}` : site });
 }

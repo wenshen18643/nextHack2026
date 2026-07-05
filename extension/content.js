@@ -228,6 +228,7 @@
 
   const dom_dump_initial_delay_ms = 3000;
   const dom_dump_debounce_ms = 2000;
+  const dom_dump_max_chars = 3500000;
   let dom_dump_timer = null;
 
   /**
@@ -270,7 +271,11 @@
     for (const script of clone.querySelectorAll("script")) {
       script.remove();
     }
-    return `<!doctype html>\n${clone.outerHTML}`;
+    const html = `<!doctype html>\n${clone.outerHTML}`;
+    if (html.length > dom_dump_max_chars) {
+      return `${html.slice(0, dom_dump_max_chars)}\n<!-- sentinel: truncated -->`;
+    }
+    return html;
   }
 
   /**

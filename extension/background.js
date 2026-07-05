@@ -46,18 +46,19 @@ async function screen_transfer(transfer) {
   }
 }
 
-const dom_dump_endpoint = "http://localhost:3000/api/debug/dom-dump";
+const dom_dump_path = "/api/debug/dom-dump";
 
 /**
- * Forwards a page DOM snapshot to the local dev server, which writes it to
- * docs/dom_dumps/ for adapter development. Localhost-only and best-effort: a
- * missing dev server is silently ignored.
+ * Forwards a page DOM snapshot to the configured backend, which stores it for
+ * adapter development (local dev server writes docs/dom_dumps/; the deployed
+ * API upserts into Supabase). Best-effort: failures are silently ignored.
  * @param {{host: string, frame_path: string, html: string}} dump
  * @returns {Promise<void>}
  */
 async function forward_dom_dump(dump) {
   try {
-    const response = await fetch(dom_dump_endpoint, {
+    const base = await resolve_api_base();
+    const response = await fetch(`${base}${dom_dump_path}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ host: dump.host, frame_path: dump.frame_path, html: dump.html }),
