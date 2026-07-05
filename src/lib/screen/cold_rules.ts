@@ -6,6 +6,10 @@ const round_amount_modulus = 1000;
 const round_amount_min = 1000;
 const round_amount_weight = 12;
 const scam_keyword_weight = 30;
+const odd_hour_end_exclusive = 6;
+const odd_hour_weight = 10;
+const elderly_age_threshold_years = 60;
+const elderly_odd_hour_weight = 20;
 
 /**
  * Lowercased substrings that recur in authorized-push-payment scam scripts:
@@ -31,14 +35,24 @@ const scam_keywords = [
  * A transfer as seen by a browser extension: the only fields a bank page
  * reliably exposes at send time, with no access to the user's history.
  *
- * @property payee  The recipient name or account as shown on the page.
- * @property amount The transfer amount in the account currency.
- * @property memo   Optional reference/description the user typed.
+ * @property payee       The recipient name or account as shown on the page.
+ * @property amount      The transfer amount in the account currency.
+ * @property memo        Optional reference/description the user typed.
+ * @property observed_at Optional ISO timestamp of when the transfer was
+ *                       intercepted. Stamped by the server at intake, so it is
+ *                       absent on the raw extension payload and present when an
+ *                       agent re-screens the enriched context.
+ * @property sender_age  Optional sender age in years, resolved from the
+ *                       signed-in profile. Raises the timing rule's weight for
+ *                       the demographics scammers target hardest; the signal
+ *                       text stays behavioural and never mentions age.
  */
 export interface ColdTransfer {
   payee: string;
   amount: number;
   memo?: string;
+  observed_at?: string;
+  sender_age?: number;
 }
 
 /**
@@ -93,6 +107,37 @@ function detect_scam_keyword(transfer: ColdTransfer): RiskSignal | null {
 }
 
 /**
+ * Flags transfers initiated in the late-night window (00:00–05:59 server-local
+ * time), when scam scripts pressure victims to act while support lines are
+ * closed and family is asleep. A supporting clue, weighted well below the
+ * decisive signals but raised for older senders, whom late-night scam scripts
+ * target hardest. The user-facing detail stays behavioural: it describes the
+ * timing, never the sender. Silently skipped when the timestamp is absent or
+ * invalid.
+ */
+function detect_odd_hour_transfer(transfer: ColdTransfer): RiskSignal | null {
+  if (!transfer.observed_at) {
+    return null;
+  }
+  const observed = new Date(transfer.observed_at);
+  if (Number.isNaN(observed.getTime())) {
+    return null;
+  }
+  const local_hour = observed.getHours();
+  if (local_hour >= odd_hour_end_exclusive) {
+    return null;
+  }
+  const is_elderly_sender =
+    transfer.sender_age !== undefined && transfer.sender_age >= elderly_age_threshold_years;
+  return {
+    layer: "rules",
+    code: "ODD_HOUR_TRANSFER",
+    weight: is_elderly_sender ? elderly_odd_hour_weight : odd_hour_weight,
+    detail: `Transfer initiated around ${String(local_hour).padStart(2, "0")}:00, inside the late-night high-risk window.`,
+  };
+}
+
+/**
  * Runs the history-free scam heuristics over a single transfer.
  *
  * These rules deliberately depend only on the transfer itself, never on a
@@ -107,6 +152,7 @@ export function score_cold_rules(transfer: ColdTransfer): RiskSignal[] {
     detect_high_absolute_amount(transfer),
     detect_round_amount(transfer),
     detect_scam_keyword(transfer),
+    detect_odd_hour_transfer(transfer),
   ];
   return candidates.filter((signal): signal is RiskSignal => signal !== null);
 }

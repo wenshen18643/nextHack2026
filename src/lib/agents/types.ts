@@ -20,6 +20,14 @@ export type AgentName = "risk" | "behaviour" | "anomaly";
  *                            were flagged (advice 'warn' or 'block'). Enriched
  *                            from history before fan-out so every agent and the
  *                            AI adjudicator can weight a repeat offender.
+ * @property sender_name         Signed-in sender's display name, when known.
+ * @property sender_age          Signed-in sender's approximate age in years,
+ *                               derived from the profile birth year. Powers
+ *                               age-aware weighting; never cited to the user.
+ * @property payee_transfer_count How many prior transfers went to this
+ *                                recipient, enriched from history.
+ * @property payee_avg_amount     Mean amount previously sent to this recipient,
+ *                                enriched from history.
  */
 export interface TransferContext {
   payee: string;
@@ -29,6 +37,10 @@ export interface TransferContext {
   channel: string;
   observed_at: string;
   prior_flag_count?: number;
+  sender_name?: string;
+  sender_age?: number;
+  payee_transfer_count?: number;
+  payee_avg_amount?: number;
 }
 
 /**

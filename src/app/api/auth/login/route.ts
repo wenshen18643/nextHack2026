@@ -28,7 +28,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const response = NextResponse.json({ ok: true });
   response.cookies.set(
     session_cookie_name,
-    JSON.stringify({ email: outcome.email, full_name: outcome.full_name }),
+    JSON.stringify({
+      email: outcome.email,
+      full_name: outcome.full_name,
+      user_id: outcome.user_id,
+    }),
     { httpOnly: true, sameSite: "lax", path: "/", maxAge: session_max_age_seconds },
   );
   return response;

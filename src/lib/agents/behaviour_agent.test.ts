@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { normalize_payee_key, score_behaviour } from "./behaviour_agent";
+import { derive_firewall_state } from "@/lib/risk/state_machine";
+import { apply_ai_adjudication } from "@/lib/risk/fusion";
+import { normalize_payee_key, score_behaviour, score_flagged_account } from "./behaviour_agent";
 import type { TransferContext } from "./types";
 
 function build_context(overrides: Partial<TransferContext> = {}): TransferContext {
@@ -70,5 +72,37 @@ describe("score_behaviour", () => {
       "REPEAT_FLAGGED_PAYEE",
       "PAYEE_AMOUNT_SPIKE",
     ]);
+  });
+});
+
+describe("score_flagged_account", () => {
+  const blocklist_row = {
+    payee_key: "mule holdings 8829",
+    payee: "MULE HOLDINGS 8829",
+    reason: "Confirmed mule account from prior scam reports.",
+    source: "manual" as const,
+  };
+
+  it("returns null when the recipient is not blocklisted", () => {
+    expect(score_flagged_account(null)).toBeNull();
+  });
+
+  it("emits the blocklist signal carrying the source and reason", () => {
+    const signal = score_flagged_account(blocklist_row);
+    expect(signal?.code).toBe("KNOWN_FLAGGED_ACCOUNT");
+    expect(signal?.detail).toContain("manual");
+    expect(signal?.detail).toContain(blocklist_row.reason);
+  });
+
+  it("alone reaches the DENY band", () => {
+    const signal = score_flagged_account(blocklist_row);
+    expect(derive_firewall_state(signal?.weight ?? 0)).toBe("DENY");
+  });
+
+  it("cannot be washed to allow even by the AI's maximum downward pull", () => {
+    const signal_weight = score_flagged_account(blocklist_row)?.weight ?? 0;
+    const { final_score } = apply_ai_adjudication(signal_weight, 0);
+    expect(derive_firewall_state(final_score)).not.toBe("PASS");
+    expect(derive_firewall_state(final_score)).not.toBe("INSPECT");
   });
 });

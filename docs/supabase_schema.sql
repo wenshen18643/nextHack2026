@@ -67,6 +67,28 @@ $$;
 grant execute on function public.get_behaviour_stats(text) to service_role;
 grant execute on function public.get_anomaly_stats(integer) to service_role;
 
+-- Shared blocklist of recipient accounts confirmed as scam/mule destinations.
+-- Consulted on every screen, across all supported banks. Rows come from two
+-- sources: 'manual' (seeded by the team, below) and 'ai' (added by the AI
+-- adjudicator when it concludes the account itself is fraudulent). The first
+-- flag wins: inserts ignore duplicates so a manual entry is never overwritten.
+create table if not exists public.flagged_accounts (
+  payee_key text primary key,
+  payee text not null,
+  reason text not null,
+  source text not null check (source in ('manual', 'ai')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.flagged_accounts enable row level security;
+
+-- Manual seed entries. Add new known-bad accounts here; payee_key must be the
+-- trimmed, lowercased payee exactly as normalize_payee_key produces it.
+insert into public.flagged_accounts (payee_key, payee, reason, source)
+values
+  ('mule holdings 8829', 'MULE HOLDINGS 8829', 'Confirmed mule account from prior scam reports.', 'manual')
+on conflict (payee_key) do nothing;
+
 -- One profile row per signed-up user, keyed to the Supabase auth user. Stores
 -- the birth year that powers age-aware screening thresholds. Written by the
 -- signup route with the service-role key; no anon/public policy on purpose.

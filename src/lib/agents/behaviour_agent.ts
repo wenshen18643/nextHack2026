@@ -1,5 +1,9 @@
 import type { RiskSignal } from "@/lib/risk/types";
-import { call_supabase_rpc } from "@/lib/db/supabase_client";
+import {
+  call_supabase_rpc,
+  fetch_flagged_account,
+  type FlaggedAccountRecord,
+} from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
 import { coerce_finite_number } from "./numeric";
 import type { AgentReport, TransferContext } from "./types";
@@ -8,6 +12,7 @@ const new_payee_weight = 18;
 const payee_spike_multiple = 3;
 const payee_spike_weight = 20;
 const repeat_flagged_payee_weight = 25;
+const known_flagged_account_weight = 80;
 
 /**
  * Per-recipient history returned by the `get_behaviour_stats` Postgres function.
@@ -87,6 +92,28 @@ export function score_behaviour(
 }
 
 /**
+ * Converts a blocklist hit into the strongest deterministic signal we emit.
+ *
+ * Weighted so a blocklist hit alone reaches the DENY band, and even the AI's
+ * maximum downward pull cannot drop it below the warning band: a known scam
+ * account is never washed to "allow".
+ *
+ * @param flagged The blocklist row for this recipient, or null when absent.
+ * @returns The blocklist signal, or null when the recipient is not listed.
+ */
+export function score_flagged_account(flagged: FlaggedAccountRecord | null): RiskSignal | null {
+  if (!flagged) {
+    return null;
+  }
+  return {
+    layer: "behavioral",
+    code: "KNOWN_FLAGGED_ACCOUNT",
+    weight: known_flagged_account_weight,
+    detail: `Recipient is on the shared scam-account blocklist (${flagged.source}): ${flagged.reason}`,
+  };
+}
+
+/**
  * Reads this recipient's prior-transfer statistics from Supabase.
  *
  * Exposed separately so the main agent can fetch once and share the result with
@@ -119,12 +146,13 @@ export async function fetch_behaviour_stats(
 }
 
 /**
- * Behaviour agent: the per-recipient-history specialist.
+ * Behaviour agent: the per-recipient specialist.
  *
- * Scores the current transfer against this recipient's prior-transfer stats,
- * including any earlier flags against the same recipient. Fail-safe: when
- * history is unavailable it contributes no signals so the screen still completes
- * on the other agents.
+ * Checks the recipient against the shared scam-account blocklist, then scores
+ * the current transfer against this recipient's prior-transfer stats, including
+ * any earlier flags against the same recipient. Fail-safe: when the blocklist
+ * or history is unavailable that part simply contributes no signals so the
+ * screen still completes on the rest.
  *
  * @param context The observed transfer.
  * @param stats   Pre-fetched statistics; omit to have the agent read them. Pass
@@ -135,20 +163,21 @@ export async function run_behaviour_agent(
   context: TransferContext,
   stats?: BehaviourStats | null,
 ): Promise<AgentReport> {
-  const resolved = stats === undefined ? await fetch_behaviour_stats(context) : stats;
-  if (!resolved) {
-    log_event("behaviour-agent", "no history available — contributing no signals", {
-      payee_key: normalize_payee_key(context.payee),
-    });
-    return { agent: "behaviour", signals: [] };
-  }
+  const payee_key = normalize_payee_key(context.payee);
+  const [resolved, flagged] = await Promise.all([
+    stats === undefined ? fetch_behaviour_stats(context) : Promise.resolve(stats),
+    fetch_flagged_account(payee_key),
+  ]);
 
-  const signals = score_behaviour(context, resolved);
-  log_event("behaviour-agent", "scored recipient history", {
-    payee_key: normalize_payee_key(context.payee),
-    payee_count: resolved.payee_count,
-    payee_avg_amount: Math.round(resolved.payee_avg_amount),
-    prior_flag_count: resolved.prior_flag_count,
+  const blocklist_signal = score_flagged_account(flagged);
+  const history_signals = resolved ? score_behaviour(context, resolved) : [];
+  const signals = [...(blocklist_signal ? [blocklist_signal] : []), ...history_signals];
+
+  log_event("behaviour-agent", "scored recipient", {
+    payee_key,
+    blocklisted: flagged !== null,
+    payee_count: resolved?.payee_count ?? "unavailable",
+    prior_flag_count: resolved?.prior_flag_count ?? "unavailable",
     signals: summarize_signals(signals),
   });
   return { agent: "behaviour", signals };

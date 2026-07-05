@@ -6,8 +6,8 @@ import type { AgentReport, TransferContext } from "./types";
  * Risk agent: the history-free specialist.
  *
  * Judges the transfer on its own terms — amount thresholds, round-number
- * cash-out patterns, and scam-script vocabulary — with no dependency on stored
- * history. It is therefore always available, even on a cold database, and forms
+ * cash-out patterns, scam-script vocabulary, and the late-night timing window —
+ * with no dependency on stored history. It is therefore always available, even on a cold database, and forms
  * the deterministic floor the other agents build on.
  *
  * @param context The observed transfer.
@@ -18,6 +18,8 @@ export async function run_risk_agent(context: TransferContext): Promise<AgentRep
     payee: context.payee,
     amount: context.amount,
     memo: context.memo,
+    observed_at: context.observed_at,
+    sender_age: context.sender_age,
   };
   const signals = score_cold_rules(transfer);
   log_event("risk-agent", "scored history-free rules", { signals: summarize_signals(signals) });

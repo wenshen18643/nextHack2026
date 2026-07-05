@@ -9,6 +9,7 @@ const verdict_schema = z.object({
   risk_score: z.number().min(0).max(100),
   advice: z.enum(["allow", "warn", "block"]),
   reason: z.string().min(1),
+  flag_account: z.boolean().optional(),
 });
 
 /**
@@ -25,6 +26,10 @@ export interface ScreenContext {
   channel: string;
   observed_at: string;
   prior_flag_count?: number;
+  sender_name?: string;
+  sender_age?: number;
+  payee_transfer_count?: number;
+  payee_avg_amount?: number;
 }
 
 /**
@@ -58,14 +63,19 @@ export interface AdjudicationInput {
 /**
  * The AI's adjudicated verdict for one transfer.
  *
- * @property risk_score Model-assigned risk in [0, 100].
- * @property advice     The action the user should take.
- * @property reason     One-sentence justification shown to the user.
+ * @property risk_score   Model-assigned risk in [0, 100].
+ * @property advice       The action the user should take.
+ * @property reason       One-sentence justification shown to the user.
+ * @property flag_account True when the AI concluded the recipient account
+ *                        itself is fraudulent and should join the shared
+ *                        blocklist. Honored by the main agent only on a block
+ *                        verdict, so a mild warning can never blocklist anyone.
  */
 export interface AiScreenVerdict {
   risk_score: number;
   advice: "allow" | "warn" | "block";
   reason: string;
+  flag_account?: boolean;
 }
 
 const system_prompt = [
@@ -77,7 +87,10 @@ const system_prompt = [
   "Account for Malaysian scam patterns: fake investments, crypto, loan and prize scams, romance/impersonation, mule accounts, and any wording that signals the user was coached or is paying a stranger.",
   "Treat self-incriminating memo text (e.g. naming the recipient a scammer) as a strong risk signal, not a joke.",
   "When prior_flag_count is greater than zero, this exact recipient was flagged as suspicious before; treat that as a strong risk signal that compounds with the rest.",
-  "Output ONLY a raw JSON object, no markdown and no code fences: {\"risk_score\":0-100,\"advice\":\"allow|warn|block\",\"reason\":string}.",
+  "The context may include the signed-in sender (sender_name, sender_age) and the recipient's transfer history (payee_transfer_count, payee_avg_amount). Older senders are disproportionately targeted by late-night, urgency, and impersonation scripts — weight those patterns more strongly for them. NEVER mention the sender's age, name, or any personal attribute in the reason; describe only the transfer's behaviour.",
+  "You may also add the recipient to the shared scam-account blocklist consulted on every future transfer across all banks: set \"flag_account\":true ONLY when you conclude the recipient account ITSELF is a scam or mule destination (not merely that this one transfer looks risky), and only alongside a block verdict.",
+  "A KNOWN_FLAGGED_ACCOUNT finding means the recipient is already on that blocklist; treat it as near-conclusive evidence and do not soften it.",
+  "Output ONLY a raw JSON object, no markdown and no code fences: {\"risk_score\":0-100,\"advice\":\"allow|warn|block\",\"reason\":string,\"flag_account\":boolean}.",
   "Use allow for risk_score<30, warn for 30-69, block for 70+. The reason must be one plain sentence the sender will read, and it must justify the risk_score you chose.",
 ].join(" ");
 

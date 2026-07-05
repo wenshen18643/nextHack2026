@@ -6,7 +6,7 @@ import {
   type AiScreenVerdict,
   type SpecialistFinding,
 } from "@/lib/screen/ai_screener";
-import { insert_transfer_record } from "@/lib/db/supabase_client";
+import { insert_flagged_account, insert_transfer_record } from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
 import { run_risk_agent } from "./risk_agent";
 import {
@@ -97,6 +97,31 @@ function choose_user_reason(
 }
 
 /**
+ * Adds the recipient to the shared scam-account blocklist when the AI both
+ * blocked the transfer and explicitly asked to flag the account. The double
+ * condition means a mild verdict can never blocklist anyone, and the insert is
+ * duplicate-safe so an existing (often manual) entry is never overwritten.
+ */
+async function blocklist_account_when_ai_requests(
+  context: TransferContext,
+  ai_verdict: AiScreenVerdict | null,
+): Promise<void> {
+  if (!ai_verdict?.flag_account || ai_verdict.advice !== "block") {
+    return;
+  }
+  log_event("main-agent", "AI flagged recipient for the blocklist", {
+    payee: context.payee,
+    reason: ai_verdict.reason,
+  });
+  await insert_flagged_account({
+    payee_key: normalize_payee_key(context.payee),
+    payee: context.payee,
+    reason: ai_verdict.reason,
+    source: "ai",
+  });
+}
+
+/**
  * Records the screened transfer so subsequent behaviour and anomaly lookups can
  * learn from it. Awaited but best-effort: failures are swallowed downstream.
  */
@@ -145,6 +170,8 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
   const enriched_context: TransferContext = {
     ...context,
     prior_flag_count: behaviour_stats?.prior_flag_count ?? 0,
+    payee_transfer_count: behaviour_stats?.payee_count,
+    payee_avg_amount: behaviour_stats?.payee_avg_amount,
   };
 
   const [risk_report, behaviour_report, anomaly_report] = await Promise.all([
@@ -200,7 +227,10 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
     reason,
   });
 
-  await log_screened_transfer(context, advice, score, state);
+  await Promise.all([
+    log_screened_transfer(context, advice, score, state),
+    blocklist_account_when_ai_requests(context, ai_verdict),
+  ]);
 
   return {
     advice,

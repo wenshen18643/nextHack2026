@@ -30,6 +30,7 @@ async function screen_transfer(transfer) {
     console.log("[sentinel-bg] screening via", `${base}${screen_path}`, transfer);
     const response = await fetch(`${base}${screen_path}`, {
       method: "POST",
+      credentials: "include",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(transfer),
     });

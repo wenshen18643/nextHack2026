@@ -145,6 +145,163 @@ export async function upsert_dom_dump(row: {
 }
 
 /**
+ * One row of the shared scam-account blocklist.
+ *
+ * @property payee_key Normalized recipient key (trimmed, lowercased).
+ * @property payee     Recipient display name as first observed.
+ * @property reason    Why the account was flagged.
+ * @property source    Who flagged it: 'manual' (team) or 'ai' (adjudicator).
+ */
+export interface FlaggedAccountRecord {
+  payee_key: string;
+  payee: string;
+  reason: string;
+  source: "manual" | "ai";
+}
+
+/**
+ * Looks up one recipient in the shared scam-account blocklist.
+ *
+ * Fail-safe: configuration gaps, timeouts, and HTTP errors resolve to null so
+ * the screen proceeds without the blocklist signal rather than failing.
+ *
+ * @param payee_key The normalized recipient key to look up.
+ * @returns The blocklist row, or null when absent or unavailable.
+ */
+export async function fetch_flagged_account(
+  payee_key: string,
+): Promise<FlaggedAccountRecord | null> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const query = new URLSearchParams({
+      payee_key: `eq.${payee_key}`,
+      select: "payee_key,payee,reason,source",
+      limit: "1",
+    });
+    const response = await fetch(`${config.url}/rest/v1/flagged_accounts?${query}`, {
+      signal: controller.signal,
+      headers: build_auth_headers(config.key),
+    });
+    if (!response.ok) {
+      console.warn(`[supabase] flagged account lookup HTTP ${response.status} — skipping.`);
+      return null;
+    }
+    const rows = (await response.json()) as FlaggedAccountRecord[];
+    return rows[0] ?? null;
+  } catch (error) {
+    console.error("[supabase] flagged account lookup failed — skipping:", error);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Adds one recipient to the shared scam-account blocklist.
+ *
+ * Duplicate-safe: inserts ignore an existing row for the same payee_key, so the
+ * first flag (often a manual seed) is never overwritten by a later one.
+ *
+ * @param row The blocklist entry to add.
+ * @returns True when the row was stored (or already existed), false otherwise.
+ */
+export async function insert_flagged_account(row: FlaggedAccountRecord): Promise<boolean> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return false;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const response = await fetch(
+      `${config.url}/rest/v1/flagged_accounts?on_conflict=payee_key`,
+      {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          ...build_auth_headers(config.key),
+          prefer: "resolution=ignore-duplicates,return=minimal",
+        },
+        body: JSON.stringify(row),
+      },
+    );
+    if (response.ok) {
+      console.log(`[supabase] blocklisted payee_key="${row.payee_key}" source=${row.source}`);
+    } else {
+      console.warn(`[supabase] blocklist insert HTTP ${response.status} — continuing.`);
+    }
+    return response.ok;
+  } catch (error) {
+    console.error("[supabase] blocklist insert failed — continuing:", error);
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * One stored user profile, as read back for screening enrichment.
+ *
+ * @property full_name  The user's display name.
+ * @property birth_year The birth year collected at signup.
+ */
+export interface ProfileRecord {
+  full_name: string;
+  birth_year: number;
+}
+
+/**
+ * Reads one user's profile by Supabase auth user id.
+ *
+ * Fail-safe: configuration gaps, timeouts, and HTTP errors resolve to null so
+ * screening proceeds without sender enrichment rather than failing.
+ *
+ * @param user_id The Supabase auth user id from the session.
+ * @returns The profile, or null when absent or unavailable.
+ */
+export async function fetch_profile_record(user_id: string): Promise<ProfileRecord | null> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const query = new URLSearchParams({
+      id: `eq.${user_id}`,
+      select: "full_name,birth_year",
+      limit: "1",
+    });
+    const response = await fetch(`${config.url}/rest/v1/profiles?${query}`, {
+      signal: controller.signal,
+      headers: build_auth_headers(config.key),
+    });
+    if (!response.ok) {
+      console.warn(`[supabase] profile lookup HTTP ${response.status} — skipping.`);
+      return null;
+    }
+    const rows = (await response.json()) as ProfileRecord[];
+    return rows[0] ?? null;
+  } catch (error) {
+    console.error("[supabase] profile lookup failed — skipping:", error);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
  * Persists one signed-up user's profile so age-aware screening signals can read
  * it later. Unlike transfer logging this is NOT best-effort: signup must fail
  * loudly when the profile cannot be stored, so the caller receives the result.

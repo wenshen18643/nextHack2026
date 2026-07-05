@@ -4,12 +4,14 @@ export const session_cookie_name = "sentinel_session";
 export const session_max_age_seconds = 60 * 60 * 24 * 7;
 
 /**
- * The signed-in identity stored in the session cookie. Display-level data only;
- * anything security-sensitive stays server-side in Supabase.
+ * The signed-in identity stored in the session cookie: display data plus the
+ * Supabase user id used to look up the sender's profile during screening.
+ * Anything security-sensitive stays server-side in Supabase.
  */
 export interface SessionUser {
   email: string;
   full_name: string;
+  user_id?: string;
 }
 
 /**
@@ -25,7 +27,11 @@ export function read_session_user(): SessionUser | null {
   try {
     const parsed = JSON.parse(raw_value) as Partial<SessionUser>;
     if (typeof parsed.email === "string" && typeof parsed.full_name === "string") {
-      return { email: parsed.email, full_name: parsed.full_name };
+      return {
+        email: parsed.email,
+        full_name: parsed.full_name,
+        user_id: typeof parsed.user_id === "string" ? parsed.user_id : undefined,
+      };
     }
     return null;
   } catch {

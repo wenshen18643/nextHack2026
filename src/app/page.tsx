@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import Link from "next/link";
 import {
   Activity,
@@ -19,12 +21,19 @@ import {
 
 const hero_stats = [
   { value: "3 + 1", label: "specialist agents + AI adjudicator" },
-  { value: "8", label: "independent risk signals" },
+  { value: "10", label: "independent risk signals" },
   { value: "±25 pts", label: "bounded AI influence on the score" },
   { value: "0", label: "accounts frozen — we warn, never lock" },
 ];
 
 const detection_signals = [
+  {
+    code: "KNOWN_FLAGGED_ACCOUNT",
+    agent: "Behaviour",
+    reads: "Shared blocklist",
+    detail:
+      "Recipient is on the scam-account blocklist — seeded by the team, grown by the AI, checked across every bank.",
+  },
   {
     code: "NEW_PAYEE",
     agent: "Behaviour",
@@ -66,6 +75,12 @@ const detection_signals = [
     agent: "Anomaly",
     reads: "Timing",
     detail: "Burst of transfers in a short window — a hallmark of coached victims.",
+  },
+  {
+    code: "ODD_HOUR_TRANSFER",
+    agent: "Risk",
+    reads: "Timing",
+    detail: "Transfer initiated in the late-night window scammers favour, when help is asleep.",
   },
   {
     code: "SCAM_KEYWORD",
@@ -324,6 +339,35 @@ function HowItWorksSection() {
   );
 }
 
+const demo_video_public_path = "demo.mp4";
+
+/**
+ * Demo video: renders only when public/demo.mp4 exists, so the section appears
+ * automatically once the recording is dropped in — no code change needed.
+ */
+function DemoVideoSection() {
+  if (!existsSync(join(process.cwd(), "public", demo_video_public_path))) {
+    return null;
+  }
+  return (
+    <section id="demo-video" className="scroll-mt-20 bg-gradient-to-b from-brand-50 to-white">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <SectionHeading
+          eyebrow="See it live"
+          title="Watch Sentinel catch a scam"
+          lead="The extension intercepting a real transfer attempt, end to end."
+        />
+        <div className="mx-auto mt-12 max-w-4xl overflow-hidden rounded-xl border border-brand-100 shadow-md">
+          <video controls playsInline preload="metadata" className="w-full">
+            <source src={`/${demo_video_public_path}`} type="video/mp4" />
+            Your browser does not support embedded video — open /{demo_video_public_path} directly.
+          </video>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /**
  * Architecture: the real multi-agent pipeline and the full signal surface, so
  * the technical depth of the build is visible without reading the source.
@@ -350,7 +394,7 @@ function ArchitectureSection() {
       icon: Database,
       title: "Memory across banks",
       detail:
-        "Each verdict is persisted, so a payee flagged on one bank is remembered when it reappears on another.",
+        "Verdicts and a shared scam-account blocklist persist across banks — and the AI can add a confirmed scam account to the blocklist the moment it blocks one.",
     },
   ];
 
@@ -367,7 +411,7 @@ function ArchitectureSection() {
               </span>
             </>
           }
-          lead="Only one of the eight deterministic signals reads text. Coach a victim to type “rent” in the reference — Sentinel still sees everything else."
+          lead="Only one of the ten deterministic signals reads text. Coach a victim to type “rent” in the reference — Sentinel still sees everything else."
         />
         <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {pipeline_stages.map((stage, index) => (
@@ -418,8 +462,9 @@ function ArchitectureSection() {
             </span>
             <h3 className="mt-4 font-semibold text-ink-900">Time-aware screening</h3>
             <p className="mt-2 text-sm leading-relaxed text-ink-500">
-              Every transfer is timestamped at observation. A large payment to a brand-new
-              recipient at 2 a.m. carries more weight than the same payment at noon.
+              Every transfer is timestamped at observation and the ODD_HOUR_TRANSFER signal
+              weights the late-night window scammers favour. A large payment to a brand-new
+              recipient at 2 a.m. scores higher than the same payment at noon.
             </p>
           </div>
           <div className="rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
@@ -560,6 +605,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <HowItWorksSection />
+      <DemoVideoSection />
       <ArchitectureSection />
       <PricingSection />
       <InstallSection />
