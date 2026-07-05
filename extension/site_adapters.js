@@ -134,7 +134,7 @@ const ringgit_amount_pattern = /(?:RM|MYR)\s*([0-9][\d,]*(?:\.\d{1,2})?)/gi;
 const send_button_text_pattern =
   /\b(confirm|transfer|send|proceed|pay|agree|submit|continue|next|accept|authorise|authorize|sahkan|hantar|bayar|teruskan|pindah|pemindahan|seterusnya|setuju)\b/i;
 const blocked_button_text_pattern =
-  /\b(back|cancel|edit|add|save|close|clear|reset|delete|remove|logout|batal|kembali|semula|tutup|padam|keluar)\b/i;
+  /\b(back|cancel|edit|add|save|close|clear|reset|delete|remove|logout|another|receipt|batal|kembali|semula|tutup|padam|keluar)\b/i;
 
 /**
  * Lowercases, collapses whitespace, and strips trailing colons/asterisks so
@@ -327,6 +327,74 @@ const cimb_adapter = {
   },
 };
 
+const hlb_proxy_type_labels = [
+  "mobile number",
+  "nric number",
+  "ic number",
+  "passport number",
+  "army identification number",
+  "police identification number",
+  "business registration number",
+];
+
+/**
+ * Reads the value cell paired with a label cell in Hong Leong Connect's
+ * summary tables, which render every field as
+ * `<td class="tbl_col_label">Label</td><td>Value</td>`. When the value cell
+ * holds both an on-screen span and a masked print-only span, the on-screen
+ * one (#idProxyIdIgnorePrint) is preferred so the unmasked value is read.
+ * @param {string[]} labels Normalized label texts to match exactly.
+ * @returns {string} The paired value text, or an empty string.
+ */
+function read_hlb_summary_value(labels) {
+  const label_set = new Set(labels);
+  for (const cell of document.querySelectorAll("td.tbl_col_label")) {
+    if (!label_set.has(normalize_label_text(cell.textContent || ""))) {
+      continue;
+    }
+    const value_cell = cell.nextElementSibling;
+    if (!value_cell) {
+      continue;
+    }
+    const on_screen_span = value_cell.querySelector("#idProxyIdIgnorePrint");
+    const value = (on_screen_span ?? value_cell).textContent.trim();
+    if (value) {
+      return value;
+    }
+  }
+  return "";
+}
+
+/**
+ * Adapter for Hong Leong Connect (s.hongleongconnect.my). The transfer flow
+ * renders entry, confirmation, and receipt steps at one URL inside the
+ * idMainFrame iframe; the confirmation/summary steps lay every field out in
+ * tbl_col_label tables, which is where the transfer is read. On the entry
+ * form these tables carry no text values yet, so the read comes back empty
+ * and screening waits for the confirmation step — the ideal pre-OTP point.
+ */
+const hlb_adapter = {
+  send_button_selector: "input[type=submit], button, [role=button]",
+  is_send_button(button) {
+    const label = ("value" in button && button.value ? button.value : button.textContent) || "";
+    return send_button_text_pattern.test(label) && !blocked_button_text_pattern.test(label);
+  },
+  read_transfer() {
+    const payee =
+      read_hlb_summary_value(["recipient name"]) ||
+      read_hlb_summary_value(hlb_proxy_type_labels);
+    const amount_raw = read_hlb_summary_value([
+      "transfer amount (myr)",
+      "transfer amount",
+      "total amount (myr)",
+    ]);
+    const memo =
+      read_hlb_summary_value(["other payment detail", "other payment details"]) ||
+      read_hlb_summary_value(["recipient reference"]);
+    return { payee, amount: parse_amount(amount_raw), memo };
+  },
+};
+
 /**
  * Adapter for the local demo bank page, which exposes explicit data attributes
  * so the demo is deterministic regardless of styling.
@@ -345,6 +413,7 @@ const demo_adapter = {
 const adapters_by_host = {
   "localhost": demo_adapter,
   "cimbclicks.com.my": cimb_adapter,
+  "hongleongconnect.my": hlb_adapter,
 };
 
 /**

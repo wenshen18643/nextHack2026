@@ -66,9 +66,13 @@ async function forward_dom_dump(dump) {
     if (response.ok) {
       const { saved } = await response.json();
       console.log(`[sentinel-bg] dom dump saved as ${saved}`);
+    } else {
+      console.warn(
+        `[sentinel-bg] dom dump rejected: HTTP ${response.status} (${dump.host}, ${dump.html.length} chars)`,
+      );
     }
-  } catch {
-    /* Dev server not running; dumps are optional. */
+  } catch (error) {
+    console.warn("[sentinel-bg] dom dump send failed:", error);
   }
 }
 

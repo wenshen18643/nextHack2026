@@ -228,7 +228,7 @@
 
   const dom_dump_initial_delay_ms = 3000;
   const dom_dump_debounce_ms = 2000;
-  const dom_dump_max_chars = 3500000;
+  const dom_dump_max_chars = 2000000;
   let dom_dump_timer = null;
 
   /**
