@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sentinel Wallet Shield</string>
+    <string name="accessibility_label">Sentinel Scam Shield</string>
+    <string name="accessibility_description">Watches supported wallet apps and warns you before you send money to a likely scam. It never moves or blocks money — it only shows a warning you can dismiss.</string>
+
+    <string name="main_title">Sentinel Wallet Shield</string>
+    <string name="main_subtitle">AI scam screening for TNG eWallet transfers. Warns before the money moves — never freezes it.</string>
+    <string name="status_checking">Checking protection status…</string>
+    <string name="btn_enable_accessibility">Enable protection (Accessibility)</string>
+    <string name="btn_grant_overlay">Allow display over other apps (optional)</string>
+    <string name="api_base_label">Screening API base URL</string>
+    <string name="btn_save_api_base">Save API URL</string>
+    <string name="btn_open_demo">Open Mock TNG transfer (demo)</string>
+    <string name="demo_hint">The demo screen is read by the same accessibility service that reads the real TNG app, so you can see the full warning flow without installing TNG.</string>
+
+    <string name="status_protected">Protection active</string>
+    <string name="status_no_overlay">Accessibility on — enable overlay for warnings</string>
+    <string name="status_disabled">Protection disabled — enable accessibility service</string>
+    <string name="toast_enable_sentinel">Find "Sentinel Scam Shield" in Accessibility and turn it on.</string>
+    <string name="toast_overlay_already">Overlay permission already granted.</string>
+    <string name="toast_api_saved">API URL saved.</string>
+
+    <string name="mock_tng_title">DuitNow Transfer</string>
+    <string name="mock_confirm_heading">Confirm transfer</string>
+    <string name="mock_label_payee">Transfer to</string>
+    <string name="mock_value_payee">AHMAD TRADING SDN BHD</string>
+    <string name="mock_label_duitnow">DuitNow ID</string>
+    <string name="mock_value_duitnow">012-345 6789</string>
+    <string name="mock_label_amount">Amount</string>
+    <string name="mock_value_amount">RM 5,000.00</string>
+    <string name="mock_label_notes">Notes</string>
+    <string name="mock_value_notes">urgent investment payout</string>
+    <string name="mock_confirm_button">Confirm &amp; Transfer</string>
+    <string name="mock_sent_toast">Transfer submitted</string>
+
+    <string name="overlay_checking">AI is checking this transfer…</string>
+    <string name="overlay_footer">Protected by Sentinel Scam Shield</string>
+    <string name="overlay_badge_block">LIKELY SCAM</string>
+    <string name="overlay_badge_warn">CHECK BEFORE YOU SEND</string>
+    <string name="overlay_default_reason">This transfer looks unusual.</string>
+    <string name="overlay_cancel">Cancel transfer</string>
+    <string name="overlay_proceed">Send anyway</string>
+</resources>

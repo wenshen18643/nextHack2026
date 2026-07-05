@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tng_blue">#0055B8</color>
+    <color name="sentinel_orange">#EA580C</color>
+    <color name="danger_red">#DC2626</color>
+    <color name="amber">#D97706</color>
+    <color name="ink_900">#0F172A</color>
+    <color name="ink_700">#334155</color>
+    <color name="ink_500">#64748B</color>
+    <color name="slate_100">#F1F5F9</color>
+    <color name="slate_300">#CBD5E1</color>
+    <color name="white">#FFFFFF</color>
+    <color name="scrim">#B3000000</color>
+</resources>
