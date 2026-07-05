@@ -46,10 +46,39 @@ async function screen_transfer(transfer) {
   }
 }
 
+const dom_dump_endpoint = "http://localhost:3000/api/debug/dom-dump";
+
+/**
+ * Forwards a page DOM snapshot to the local dev server, which writes it to
+ * docs/dom_dumps/ for adapter development. Localhost-only and best-effort: a
+ * missing dev server is silently ignored.
+ * @param {{host: string, frame_path: string, html: string}} dump
+ * @returns {Promise<void>}
+ */
+async function forward_dom_dump(dump) {
+  try {
+    const response = await fetch(dom_dump_endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ host: dump.host, frame_path: dump.frame_path, html: dump.html }),
+    });
+    if (response.ok) {
+      const { saved } = await response.json();
+      console.log(`[sentinel-bg] dom dump saved as ${saved}`);
+    }
+  } catch {
+    /* Dev server not running; dumps are optional. */
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, send_response) => {
   if (message?.type === "SENTINEL_SCREEN") {
     screen_transfer(message.transfer).then(send_response);
     return true;
+  }
+  if (message?.type === "SENTINEL_DOM_DUMP") {
+    forward_dom_dump(message);
+    return false;
   }
   return false;
 });

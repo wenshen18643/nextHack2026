@@ -53,3 +53,6 @@ image.png
 
 # Claude agent memory (not part of the product)
 memory/
+
+# Live bank DOM dumps (may contain personal data — never commit)
+docs/dom_dumps/

