@@ -71,6 +71,13 @@ export default function DemoBankPage() {
             Transfer of MYR {amount || "0"} to {payee || "recipient"} completed.
           </p>
         )}
+
+        <a
+          href={`/demo-bank/review?${new URLSearchParams({ payee, amount, memo })}`}
+          className="block text-center text-sm text-ink-700 underline"
+        >
+          Bank-style review step instead
+        </a>
       </div>
     </div>
   );

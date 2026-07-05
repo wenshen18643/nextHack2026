@@ -9,6 +9,9 @@
     "https://next-hack2026.vercel.app/*",
     "https://*.cimbclicks.com.my/*"
   ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "background": {
     "service_worker": "background.js"
   },

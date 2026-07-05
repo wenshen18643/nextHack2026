@@ -5,9 +5,31 @@
  * it only interposes a warning, which is all a third party can legitimately do.
  */
 (function initialize_sentinel_shield() {
-  const adapter = window.__sentinel_resolve_adapter();
   const bypass_attribute = "data-sentinel-cleared";
   const minimum_spinner_ms = 5000;
+  const adapter_preference_key = "use_site_adapters";
+  let adapter = window.__sentinel_resolve_adapter(true);
+
+  /**
+   * Re-resolves the active adapter from the stored preference, so hand-written
+   * adapters can be switched off live to exercise the generic reader.
+   * @param {boolean} use_site_adapters Whether hand-written adapters apply.
+   */
+  function apply_adapter_preference(use_site_adapters) {
+    adapter = window.__sentinel_resolve_adapter(use_site_adapters !== false);
+    console.log(
+      `[sentinel] adapter mode: ${use_site_adapters !== false ? "site-specific" : "generic"}`,
+    );
+  }
+
+  chrome.storage.sync.get({ [adapter_preference_key]: true }, (stored) => {
+    apply_adapter_preference(stored[adapter_preference_key]);
+  });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "sync" && changes[adapter_preference_key]) {
+      apply_adapter_preference(changes[adapter_preference_key].newValue);
+    }
+  });
 
   /**
    * Resolves after the given delay.
@@ -118,6 +140,9 @@
   async function handle_send_click(event) {
     const button = event.target.closest(adapter.send_button_selector);
     if (!button || button.hasAttribute(bypass_attribute)) {
+      return;
+    }
+    if (adapter.is_send_button && !adapter.is_send_button(button)) {
       return;
     }
 

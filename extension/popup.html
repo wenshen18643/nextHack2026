@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sentinel Scam Shield</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      width: 260px;
+      margin: 0;
+      padding: 14px;
+      color: #0f172a;
+    }
+    h1 {
+      font-size: 14px;
+      margin: 0 0 10px;
+    }
+    label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      margin-top: 2px;
+    }
+    .field {
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 14px;
+      font-weight: 600;
+    }
+    .field input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 5px 7px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 400;
+    }
+    p {
+      font-size: 11px;
+      color: #64748b;
+      margin: 8px 0 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sentinel Scam Shield</h1>
+  <label>
+    <input type="checkbox" id="use-site-adapters" />
+    <span>Use site-specific adapters</span>
+  </label>
+  <p>
+    Off = every site uses the generic review-page reader, including sites that
+    have a hand-written adapter. Use this to test generic coverage.
+  </p>
+  <label class="field">
+    <span>Screening backend</span>
+    <input type="url" id="api-base" placeholder="https://next-hack2026.vercel.app" />
+  </label>
+  <p id="api-base-status"></p>
+  <script src="popup.js"></script>
+</body>
+</html>
