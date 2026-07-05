@@ -24,62 +24,51 @@ const detection_signals = [
     code: "KNOWN_FLAGGED_ACCOUNT",
     agent: "Behaviour",
     reads: "Shared blocklist",
-    detail:
-      "Recipient is on the scam-account blocklist — seeded by the team, grown by the AI, checked across every bank.",
   },
   {
     code: "NEW_PAYEE",
     agent: "Behaviour",
     reads: "Transfer history",
-    detail: "First time you have ever paid this recipient.",
   },
   {
     code: "REPEAT_FLAGGED_PAYEE",
     agent: "Behaviour",
     reads: "Transfer history",
-    detail: "This recipient was already flagged in earlier transfers — on any supported bank.",
   },
   {
     code: "PAYEE_AMOUNT_SPIKE",
     agent: "Behaviour",
     reads: "Amount pattern",
-    detail: "Amount far above what you normally send this recipient.",
   },
   {
     code: "HIGH_ABSOLUTE_AMOUNT",
     agent: "Risk",
     reads: "Amount",
-    detail: "Large transfer in absolute terms.",
   },
   {
     code: "ROUND_CASHOUT",
     agent: "Risk",
     reads: "Amount pattern",
-    detail: "Suspiciously round cash-out figure, a classic mule pattern.",
   },
   {
     code: "POPULATION_OUTLIER",
     agent: "Anomaly",
     reads: "Statistics",
-    detail: "Amount is a statistical outlier versus all screened transfers.",
   },
   {
     code: "HIGH_VELOCITY",
     agent: "Anomaly",
     reads: "Timing",
-    detail: "Burst of transfers in a short window — a hallmark of coached victims.",
   },
   {
     code: "ODD_HOUR_TRANSFER",
     agent: "Risk",
     reads: "Timing",
-    detail: "Transfer initiated in the late-night window scammers favour, when help is asleep.",
   },
   {
     code: "SCAM_KEYWORD",
     agent: "Risk",
     reads: "Text",
-    detail: "Scam vocabulary in the reference or payee name — the only text-based signal.",
   },
 ];
 
@@ -155,43 +144,42 @@ const install_steps = [
 function HeroWarningCard() {
   return (
     <div className="relative">
-      <div className="absolute -right-8 -top-12 h-64 w-64 rounded-full bg-orange-500/10 blur-3xl" />
-      <div className="absolute -bottom-12 -left-8 h-56 w-56 rounded-full bg-amber-500/10 blur-3xl" />
-      <div className="relative rounded-2xl border border-orange-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-red-50 text-red-600">
+      <div className="absolute -right-12 -top-12 h-72 w-72 rounded-full bg-flame/10 blur-[100px]" />
+      <div className="relative overflow-hidden rounded-3xl border border-ink-lighter bg-void-lift p-7 shadow-2xl shadow-black/40">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-flame/40 to-transparent" />
+        <div className="flex items-center gap-4">
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-danger/10 text-danger">
             <AlertTriangle className="h-5 w-5" aria-hidden />
           </span>
           <div>
-            <p className="font-bold text-slate-900">High-risk transfer blocked</p>
-            <p className="text-sm text-slate-500">Sentinel screened this before it was sent</p>
+            <p className="font-semibold text-milk">High-risk transfer blocked</p>
+            <p className="text-sm text-milk-muted">Sentinel screened this before it was sent</p>
           </div>
-          <span className="ml-auto rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-600">
+          <span className="ml-auto rounded-full bg-danger/10 px-3.5 py-1 text-sm font-bold text-danger">
             82 / 100
           </span>
         </div>
-        <dl className="mt-4 space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
+        <dl className="mt-5 space-y-2 rounded-2xl bg-void-soft p-5 text-sm">
           <div className="flex justify-between">
-            <dt className="text-slate-500">Recipient</dt>
-            <dd className="font-semibold text-slate-900">MULE HOLDINGS 8829</dd>
+            <dt className="text-milk-faint">Recipient</dt>
+            <dd className="font-medium text-milk">MULE HOLDINGS 8829</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-slate-500">Amount</dt>
-            <dd className="font-semibold text-slate-900">MYR 4,900.00</dd>
+            <dt className="text-milk-faint">Amount</dt>
+            <dd className="font-medium text-milk">MYR 4,900.00</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-slate-500">Reference</dt>
-            <dd className="font-semibold text-slate-900">(blank)</dd>
+            <dt className="text-milk-faint">Reference</dt>
+            <dd className="font-medium text-milk">(blank)</dd>
           </div>
         </dl>
-        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-          <span className="rounded-full bg-orange-50 px-2.5 py-1 text-orange-700">NEW_PAYEE</span>
-          <span className="rounded-full bg-orange-50 px-2.5 py-1 text-orange-700">ROUND_CASHOUT</span>
-          <span className="rounded-full bg-orange-50 px-2.5 py-1 text-orange-700">POPULATION_OUTLIER</span>
+        <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide">
+          <span className="rounded-full bg-flame-faint px-3 py-1.5 text-flame">NEW_PAYEE</span>
+          <span className="rounded-full bg-flame-faint px-3 py-1.5 text-flame">ROUND_CASHOUT</span>
+          <span className="rounded-full bg-flame-faint px-3 py-1.5 text-flame">POPULATION_OUTLIER</span>
         </div>
-        <p className="mt-4 text-sm leading-relaxed text-slate-700">
+        <p className="mt-5 text-sm leading-relaxed text-milk-dim">
           First-ever transfer to this recipient, at an amount far outside your normal pattern.
-          Scammers coach victims to leave the reference blank — Sentinel does not need it.
         </p>
       </div>
     </div>
@@ -202,26 +190,26 @@ export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:py-32">
-          <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-12">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(249,115,22,0.15),transparent)]" />
+        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
+          <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-sm font-semibold text-orange-700">
-                <Zap className="h-4 w-4" aria-hidden />
+              <div className="inline-flex items-center gap-2 rounded-full border border-ink-lighter bg-void-lift px-4 py-1.5 text-sm font-medium text-milk-muted">
+                <Zap className="h-4 w-4 text-flame" aria-hidden />
                 Screens the transfer before the money moves
               </div>
-              <h1 className="mt-6 text-5xl font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl lg:text-7xl">
+              <h1 className="mt-7 text-5xl font-extrabold leading-[1.05] tracking-tight text-milk sm:text-6xl lg:text-7xl">
                 The last checkpoint between you and a scammer
               </h1>
-              <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-700">
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-milk-dim">
                 Sentinel reads the transfer on your bank&apos;s own page, runs it through a
-                multi-agent AI risk engine, and warns you the instant something looks wrong — before
-                you press Send.
+                multi-agent AI risk engine, and warns you before you press Send.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
+              <div className="mt-9 flex flex-wrap items-center gap-4">
                 <Link
                   href="#pricing"
-                  className="group inline-flex items-center gap-2 rounded-full bg-orange-600 px-7 py-3.5 font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-700"
+                  className="group inline-flex items-center gap-2 rounded-full bg-flame px-8 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-flame-deep"
                 >
                   Get protected free
                   <ArrowRight
@@ -231,22 +219,26 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/demo-bank"
-                  className="rounded-full border border-slate-200 bg-white px-7 py-3.5 font-semibold text-slate-700 transition-all duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+                  className="group inline-flex items-center gap-2 rounded-full border border-ink-lighter bg-void-lift px-8 py-4 font-semibold text-milk transition-all duration-200 hover:border-milk-faint hover:bg-void-hover"
                 >
                   Try the live demo
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                    aria-hidden
+                  />
                 </Link>
               </div>
-              <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-slate-600">
+              <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-milk-muted">
                 <span className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600" aria-hidden />
+                  <Check className="h-4 w-4 text-success" aria-hidden />
                   Never freezes your account
                 </span>
                 <span className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600" aria-hidden />
-                  No bank integration needed
+                  <Check className="h-4 w-4 text-success" aria-hidden />
+                  No bank integration
                 </span>
                 <span className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600" aria-hidden />
+                  <Check className="h-4 w-4 text-success" aria-hidden />
                   Works in your browser
                 </span>
               </div>
@@ -257,70 +249,89 @@ export default function HomePage() {
       </section>
 
       {/* Trust bar */}
-      <section className="border-y border-slate-100 bg-slate-50/50">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <section className="border-y border-ink-light/50 bg-void-soft">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <p className="text-3xl font-extrabold text-slate-900">3 + 1</p>
-              <p className="mt-1 text-sm text-slate-600">specialist agents + AI adjudicator</p>
+              <p className="text-4xl font-extrabold tracking-tight text-milk">3 + 1</p>
+              <p className="mt-1 text-sm text-milk-muted">specialist agents + AI adjudicator</p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold text-slate-900">10</p>
-              <p className="mt-1 text-sm text-slate-600">independent risk signals</p>
+              <p className="text-4xl font-extrabold tracking-tight text-milk">10</p>
+              <p className="mt-1 text-sm text-milk-muted">independent risk signals</p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold text-slate-900">±25 pts</p>
-              <p className="mt-1 text-sm text-slate-600">bounded AI influence on the score</p>
+              <p className="text-4xl font-extrabold tracking-tight text-milk">±25 pts</p>
+              <p className="mt-1 text-sm text-milk-muted">bounded AI influence on score</p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold text-slate-900">0</p>
-              <p className="mt-1 text-sm text-slate-600">accounts frozen — we warn, never lock</p>
+              <p className="text-4xl font-extrabold tracking-tight text-milk">0</p>
+              <p className="mt-1 text-sm text-milk-muted">accounts frozen — we warn, never lock</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="scroll-mt-20 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:py-32">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Three steps, zero bank paperwork
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-slate-600">
-              Everything happens in your browser, on the bank page you already use.
-            </p>
-          </div>
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            <div className="relative">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600 text-white">
-                <Eye className="h-6 w-6" aria-hidden />
-              </div>
-              <h3 className="mt-5 text-xl font-semibold text-slate-900">Intercept</h3>
-              <p className="mt-2 leading-relaxed text-slate-600">
-                The extension watches the transfer form on a supported bank page and catches the
-                Send click before it submits — no bank integration required.
+      <section id="how-it-works" className="scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
+          <div className="grid gap-16 lg:grid-cols-2 lg:gap-24">
+            <div>
+              <h2 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-milk sm:text-5xl">
+                Three steps.
+                <br />
+                Zero bank paperwork.
+              </h2>
+              <p className="mt-5 max-w-md text-lg leading-relaxed text-milk-muted">
+                Everything happens in your browser, on the bank page you already use.
               </p>
+              <Link
+                href="/demo-bank"
+                className="mt-8 inline-flex items-center gap-2 rounded-full border border-ink-lighter bg-void-lift px-6 py-3 font-semibold text-milk transition-all duration-200 hover:border-milk-faint hover:bg-void-hover"
+              >
+                See it on the Demo Bank
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
             </div>
-            <div className="relative">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600 text-white">
-                <Brain className="h-6 w-6" aria-hidden />
+            <div className="space-y-10">
+              <div className="group flex gap-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-ink-lighter bg-void-lift transition-colors group-hover:border-flame/30">
+                  <Eye className="h-6 w-6 text-flame" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-milk-faint">01</p>
+                  <h3 className="mt-1 text-xl font-semibold text-milk">Intercept</h3>
+                  <p className="mt-2 leading-relaxed text-milk-muted">
+                    Catches the Send click before it submits — no bank integration required.
+                  </p>
+                </div>
               </div>
-              <h3 className="mt-5 text-xl font-semibold text-slate-900">Screen</h3>
-              <p className="mt-2 leading-relaxed text-slate-600">
-                The payee, amount, and reference are screened by three specialist agents and an AI
-                adjudicator that fuses every signal into one explainable verdict.
-              </p>
-            </div>
-            <div className="relative">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-600 text-white">
-                <AlertTriangle className="h-6 w-6" aria-hidden />
+              <div className="group flex gap-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-ink-lighter bg-void-lift transition-colors group-hover:border-flame/30">
+                  <Brain className="h-6 w-6 text-flame" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-milk-faint">02</p>
+                  <h3 className="mt-1 text-xl font-semibold text-milk">Screen</h3>
+                  <p className="mt-2 leading-relaxed text-milk-muted">
+                    Three specialist agents and an AI adjudicator fuse every signal into one
+                    explainable verdict.
+                  </p>
+                </div>
               </div>
-              <h3 className="mt-5 text-xl font-semibold text-slate-900">Warn</h3>
-              <p className="mt-2 leading-relaxed text-slate-600">
-                A clear card explains exactly why the transfer looks risky, so you can cancel with
-                confidence — or proceed. The choice always stays yours.
-              </p>
+              <div className="group flex gap-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-ink-lighter bg-void-lift transition-colors group-hover:border-flame/30">
+                  <AlertTriangle className="h-6 w-6 text-flame" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-milk-faint">03</p>
+                  <h3 className="mt-1 text-xl font-semibold text-milk">Warn</h3>
+                  <p className="mt-2 leading-relaxed text-milk-muted">
+                    A clear card explains exactly why the transfer looks risky. Cancel or proceed —
+                    the choice is always yours.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -328,17 +339,17 @@ export default function HomePage() {
 
       {/* Demo video */}
       {existsSync(join(process.cwd(), "public", "demo.mp4")) && (
-        <section id="demo-video" className="scroll-mt-20 bg-slate-50/50">
-          <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 sm:py-24 lg:py-32">
+        <section id="demo-video" className="scroll-mt-20 bg-void-soft">
+          <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
             <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              <h2 className="text-4xl font-extrabold tracking-tight text-milk sm:text-5xl">
                 Watch Sentinel catch a scam
               </h2>
-              <p className="mt-4 text-lg leading-relaxed text-slate-600">
+              <p className="mt-4 text-lg leading-relaxed text-milk-muted">
                 The extension intercepting a real transfer attempt, end to end.
               </p>
             </div>
-            <div className="mt-12 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="mt-14 overflow-hidden rounded-3xl border border-ink-lighter bg-void-lift shadow-2xl shadow-black/40">
               <video controls playsInline preload="metadata" className="w-full">
                 <source src="/demo.mp4" type="video/mp4" />
                 Your browser does not support embedded video.
@@ -349,94 +360,96 @@ export default function HomePage() {
       )}
 
       {/* Architecture */}
-      <section id="architecture" className="scroll-mt-20 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:py-32">
-          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                Not a keyword filter — a risk engine
-              </h2>
-              <p className="mt-4 text-lg leading-relaxed text-slate-600">
-                Only one of the ten deterministic signals reads text. Coach a victim to type “rent”
-                in the reference — Sentinel still sees everything else.
+      <section id="architecture" className="scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
+          <div className="max-w-3xl">
+            <h2 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-milk sm:text-5xl">
+              Not a keyword filter.
+              <br />
+              A risk engine.
+            </h2>
+            <p className="mt-5 text-lg leading-relaxed text-milk-muted">
+              Only one of the ten deterministic signals reads text. Coach a victim to type “rent” in
+              the reference — Sentinel still sees everything else.
+            </p>
+          </div>
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-3xl border border-ink-lighter bg-void-lift p-6 transition-colors hover:border-milk-faint">
+              <Network className="h-6 w-6 text-flame" aria-hidden />
+              <h3 className="mt-5 font-semibold text-milk">Main agent fans out</h3>
+              <p className="mt-2 text-sm leading-relaxed text-milk-muted">
+                Risk, Behaviour, and Anomaly specialists screen in parallel.
               </p>
-              <div className="mt-8 grid gap-6 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5">
-                  <Network className="h-6 w-6 text-orange-600" aria-hidden />
-                  <h3 className="mt-3 font-semibold text-slate-900">Main agent fans out</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                    Risk, Behaviour, and Anomaly specialists screen in parallel.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5">
-                  <Activity className="h-6 w-6 text-orange-600" aria-hidden />
-                  <h3 className="mt-3 font-semibold text-slate-900">Deterministic fusion</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                    Every signal is weighted into a reproducible 0–100 risk score.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5">
-                  <Brain className="h-6 w-6 text-orange-600" aria-hidden />
-                  <h3 className="mt-3 font-semibold text-slate-900">AI adjudication</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                    An LLM rules on the evidence and can move the result a bounded ±25 points.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5">
-                  <Database className="h-6 w-6 text-orange-600" aria-hidden />
-                  <h3 className="mt-3 font-semibold text-slate-900">Memory across banks</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                    Verdicts and a shared scam-account blocklist persist across banks.
-                  </p>
-                </div>
-              </div>
             </div>
-            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <caption className="sr-only">Every deterministic risk signal and what it reads</caption>
-                <thead>
-                  <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Signal
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Agent
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Reads
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detection_signals.map((signal) => (
-                    <tr key={signal.code} className="border-b border-slate-100 last:border-0">
-                      <td className="px-5 py-3 font-mono text-xs font-semibold text-orange-700">
-                        {signal.code}
-                      </td>
-                      <td className="px-5 py-3 text-slate-700">{signal.agent}</td>
-                      <td className="px-5 py-3 text-slate-700">{signal.reads}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="rounded-3xl border border-ink-lighter bg-void-lift p-6 transition-colors hover:border-milk-faint">
+              <Activity className="h-6 w-6 text-flame" aria-hidden />
+              <h3 className="mt-5 font-semibold text-milk">Deterministic fusion</h3>
+              <p className="mt-2 text-sm leading-relaxed text-milk-muted">
+                Every signal is weighted into a reproducible 0–100 risk score.
+              </p>
+            </div>
+            <div className="rounded-3xl border border-ink-lighter bg-void-lift p-6 transition-colors hover:border-milk-faint">
+              <Brain className="h-6 w-6 text-flame" aria-hidden />
+              <h3 className="mt-5 font-semibold text-milk">AI adjudication</h3>
+              <p className="mt-2 text-sm leading-relaxed text-milk-muted">
+                An LLM rules on the evidence and can move the result a bounded ±25 points.
+              </p>
+            </div>
+            <div className="rounded-3xl border border-ink-lighter bg-void-lift p-6 transition-colors hover:border-milk-faint">
+              <Database className="h-6 w-6 text-flame" aria-hidden />
+              <h3 className="mt-5 font-semibold text-milk">Memory across banks</h3>
+              <p className="mt-2 text-sm leading-relaxed text-milk-muted">
+                Verdicts and a shared scam-account blocklist persist across banks.
+              </p>
             </div>
           </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6">
-              <Clock className="h-6 w-6 text-orange-600" aria-hidden />
-              <h3 className="mt-4 font-semibold text-slate-900">Time-aware screening</h3>
-              <p className="mt-2 leading-relaxed text-slate-600">
-                Every transfer is timestamped at observation and the late-night window scammers
-                favour adds weight. A large payment to a brand-new recipient at 2 a.m. scores higher
-                than the same payment at noon.
+
+          <div className="mt-8 overflow-hidden rounded-3xl border border-ink-lighter bg-void-lift">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <caption className="sr-only">Every deterministic risk signal and what it reads</caption>
+              <thead>
+                <tr className="border-b border-ink-lighter text-xs uppercase tracking-wide text-milk-faint">
+                  <th scope="col" className="px-6 py-4 font-semibold">
+                    Signal
+                  </th>
+                  <th scope="col" className="px-6 py-4 font-semibold">
+                    Agent
+                  </th>
+                  <th scope="col" className="px-6 py-4 font-semibold">
+                    Reads
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {detection_signals.map((signal) => (
+                  <tr key={signal.code} className="border-b border-ink-light/50 last:border-0">
+                    <td className="px-6 py-4 font-mono text-xs font-semibold text-flame">
+                      {signal.code}
+                    </td>
+                    <td className="px-6 py-4 text-milk-dim">{signal.agent}</td>
+                    <td className="px-6 py-4 text-milk-dim">{signal.reads}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            <div className="rounded-3xl border border-ink-lighter bg-void-lift p-7">
+              <Clock className="h-6 w-6 text-flame" aria-hidden />
+              <h3 className="mt-5 font-semibold text-milk">Time-aware screening</h3>
+              <p className="mt-2 leading-relaxed text-milk-muted">
+                The late-night window scammers favour adds weight. A large payment to a brand-new
+                recipient at 2 a.m. scores higher than the same payment at noon.
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6">
-              <Users className="h-6 w-6 text-orange-600" aria-hidden />
-              <h3 className="mt-4 font-semibold text-slate-900">Age-aware protection</h3>
-              <p className="mt-2 leading-relaxed text-slate-600">
-                Your Sentinel account stores your birth year — collected once, used only to
-                calibrate protection thresholds for the demographics scammers target hardest.
+            <div className="rounded-3xl border border-ink-lighter bg-void-lift p-7">
+              <Users className="h-6 w-6 text-flame" aria-hidden />
+              <h3 className="mt-5 font-semibold text-milk">Age-aware protection</h3>
+              <p className="mt-2 leading-relaxed text-milk-muted">
+                Birth year is collected once and used only to calibrate thresholds for the
+                demographics scammers target hardest.
               </p>
             </div>
           </div>
@@ -444,15 +457,15 @@ export default function HomePage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="scroll-mt-20 bg-slate-50/50">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:py-32">
+      <section id="pricing" className="scroll-mt-20 bg-void-soft">
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            <h2 className="text-4xl font-extrabold tracking-tight text-milk sm:text-5xl">
               Protection that costs less than one scam
             </h2>
-            <p className="mt-4 text-lg leading-relaxed text-slate-600">
-              Malaysians reported over RM1.2 billion in scam losses in a single year. Sentinel
-              starts at RM0.
+            <p className="mt-5 text-lg leading-relaxed text-milk-muted">
+              Malaysians reported over RM1.2 billion in scam losses in a single year. Sentinel starts
+              at RM0.
             </p>
           </div>
           <div className="mt-16 grid gap-6 md:grid-cols-3">
@@ -461,25 +474,27 @@ export default function HomePage() {
                 key={tier.name}
                 className={
                   tier.highlighted
-                    ? "relative rounded-2xl border-2 border-orange-600 bg-white p-8 shadow-sm md:scale-105"
-                    : "relative rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+                    ? "relative rounded-3xl border border-flame/50 bg-void-lift p-8 shadow-2xl shadow-black/40 md:scale-105"
+                    : "relative rounded-3xl border border-ink-lighter bg-void-lift p-8 transition-colors hover:border-milk-faint"
                 }
               >
                 {tier.highlighted ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-orange-600 px-3 py-1 text-xs font-bold text-white">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-flame px-4 py-1 text-xs font-bold text-white">
                     Most popular
                   </span>
                 ) : null}
-                <h3 className="text-lg font-semibold text-slate-900">{tier.name}</h3>
-                <p className="mt-1 text-sm text-slate-600">{tier.tagline}</p>
-                <p className="mt-4">
-                  <span className="text-4xl font-extrabold text-slate-900">{tier.price}</span>
-                  <span className="ml-1 text-slate-500">{tier.period}</span>
+                <h3 className="text-lg font-semibold text-milk">{tier.name}</h3>
+                <p className="mt-1 text-sm text-milk-muted">{tier.tagline}</p>
+                <p className="mt-6">
+                  <span className="text-5xl font-extrabold tracking-tight text-milk">
+                    {tier.price}
+                  </span>
+                  <span className="ml-1 text-milk-muted">{tier.period}</span>
                 </p>
-                <ul className="mt-6 space-y-3 text-sm text-slate-700">
+                <ul className="mt-8 space-y-4 text-sm text-milk-dim">
                   {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                    <li key={feature} className="flex items-start gap-3">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
                       {feature}
                     </li>
                   ))}
@@ -488,8 +503,8 @@ export default function HomePage() {
                   href="#install"
                   className={
                     tier.highlighted
-                      ? "mt-8 block rounded-full bg-orange-600 px-5 py-3 text-center font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-orange-700"
-                      : "mt-8 block rounded-full border border-slate-200 bg-white px-5 py-3 text-center font-semibold text-slate-700 transition-all duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+                      ? "mt-8 block rounded-full bg-flame px-5 py-3.5 text-center font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-flame-deep"
+                      : "mt-8 block rounded-full border border-ink-lighter bg-void-soft px-5 py-3.5 text-center font-semibold text-milk transition-all duration-200 hover:border-milk-faint hover:bg-void-hover"
                   }
                 >
                   {tier.cta}
@@ -497,7 +512,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          <p className="mt-10 text-center text-sm text-slate-500">
+          <p className="mt-12 text-center text-sm text-milk-faint">
             Hackathon build: subscribing installs the extension in Chrome developer mode — no payment
             is collected.
           </p>
@@ -505,38 +520,41 @@ export default function HomePage() {
       </section>
 
       {/* Install */}
-      <section id="install" className="scroll-mt-20 bg-orange-600">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:py-32">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Installed in under two minutes
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-orange-100">
-              The hackathon build ships as an unpacked Chrome extension. Four steps and the shield is
-              live on every supported bank page.
-            </p>
-          </div>
-          <ol className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {install_steps.map((step, index) => (
-              <li key={step.title} className="relative rounded-2xl bg-white/10 p-6 backdrop-blur">
-                <span className="text-sm font-bold text-orange-200">0{index + 1}</span>
-                <step.icon className="mt-4 h-8 w-8 text-white" aria-hidden />
-                <h3 className="mt-3 font-semibold text-white">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-orange-100">{step.detail}</p>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-12 text-center">
-            <Link
-              href="/demo-bank"
-              className="group inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 font-semibold text-orange-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5"
-            >
-              Watch it catch a scam on the Demo Bank
-              <ArrowRight
-                className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                aria-hidden
-              />
-            </Link>
+      <section id="install" className="scroll-mt-20">
+        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
+          <div className="grid gap-16 lg:grid-cols-2 lg:gap-24">
+            <div>
+              <h2 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-milk sm:text-5xl">
+                Installed in under two minutes.
+              </h2>
+              <p className="mt-5 max-w-md text-lg leading-relaxed text-milk-muted">
+                The hackathon build ships as an unpacked Chrome extension. Four steps and the shield
+                is live on every supported bank page.
+              </p>
+              <Link
+                href="/demo-bank"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-flame px-7 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-flame-deep"
+              >
+                Try the Demo Bank
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+            <div className="grid gap-6">
+              {install_steps.map((step, index) => (
+                <div
+                  key={step.title}
+                  className="flex items-start gap-5 rounded-2xl border border-ink-lighter bg-void-lift p-5 transition-colors hover:border-milk-faint"
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-void-soft text-sm font-bold text-milk-faint">
+                    0{index + 1}
+                  </span>
+                  <div>
+                    <h3 className="font-semibold text-milk">{step.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-milk-muted">{step.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

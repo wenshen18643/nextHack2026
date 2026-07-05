@@ -4,35 +4,29 @@
   "title": "Design System: Sentinel Scam Shield",
   "extensions": {
     "colorMeta": {
-      "safety-orange": {
-        "role": "primary",
-        "displayName": "Safety Orange",
-        "canonical": "#ea580c",
-        "tonalRamp": ["#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74", "#fff7ed"]
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "#0a0a0a",
+        "tonalRamp": ["#000000", "#0a0a0a", "#111111", "#141414", "#1a1a1a", "#262626", "#404040", "#737373"]
       },
-      "safety-orange-light": {
+      "void-lift": {
+        "role": "neutral",
+        "displayName": "Void Lift",
+        "canonical": "#141414",
+        "tonalRamp": ["#000000", "#0a0a0a", "#111111", "#141414", "#1a1a1a", "#262626", "#404040", "#737373"]
+      },
+      "milk": {
+        "role": "neutral",
+        "displayName": "Milk",
+        "canonical": "#f5f5f5",
+        "tonalRamp": ["#171717", "#404040", "#737373", "#a3a3a3", "#d4d4d4", "#e5e5e5", "#f5f5f5", "#ffffff"]
+      },
+      "flame": {
         "role": "primary",
-        "displayName": "Safety Orange Light",
+        "displayName": "Flame",
         "canonical": "#f97316",
         "tonalRamp": ["#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74", "#fff7ed"]
-      },
-      "safety-orange-lighter": {
-        "role": "neutral",
-        "displayName": "Safety Orange Lighter",
-        "canonical": "#ffedd5",
-        "tonalRamp": ["#7c2d12", "#c2410c", "#f97316", "#fb923c", "#fed7aa", "#ffedd5", "#fff7ed", "#ffffff"]
-      },
-      "neutral-bg": {
-        "role": "neutral",
-        "displayName": "Cool Paper",
-        "canonical": "#f8fafc",
-        "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#64748b", "#94a3b8", "#e2e8f0", "#f8fafc"]
-      },
-      "ink-primary": {
-        "role": "neutral",
-        "displayName": "Ink Primary",
-        "canonical": "#0f172a",
-        "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#e2e8f0"]
       }
     },
     "typographyMeta": {
@@ -54,19 +48,19 @@
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Eyebrows, table headers, chips."
+        "purpose": "Tags, signal chips, small metadata."
       }
     },
     "shadows": [
       {
-        "name": "resting",
-        "value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-        "purpose": "Default card shadow; barely perceptible depth."
+        "name": "resting-lift",
+        "value": "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+        "purpose": "Used sparingly on prominent cards like hero warning card and pricing highlight."
       },
       {
-        "name": "hover-lift",
-        "value": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
-        "purpose": "Hover state on cards and buttons."
+        "name": "ambient-glow",
+        "value": "0 0 80px rgba(249, 115, 22, 0.15)",
+        "purpose": "Decorative flame glow behind hero visuals."
       }
     ],
     "motion": [
@@ -93,25 +87,25 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Main call-to-action. Pill shape with orange-to-amber gradient.",
+      "description": "Main call-to-action. Pill shape with flame orange background.",
       "html": "<button class=\"ds-btn-primary\">Get protected free</button>",
-      "css": ".ds-btn-primary { background: linear-gradient(135deg, #ea580c, #f59e0b); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; line-height: 1.5; padding: 12px 24px; border: none; border-radius: 9999px; cursor: pointer; transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); } .ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.4); }"
+      "css": ".ds-btn-primary { background: #f97316; color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; line-height: 1.5; padding: 14px 32px; border: none; border-radius: 9999px; cursor: pointer; transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { transform: translateY(-2px); background: #ea580c; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.4); }"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Lower-priority action. White pill with light orange border.",
+      "description": "Lower-priority action. Dark pill with subtle border.",
       "html": "<button class=\"ds-btn-secondary\">Try the live demo</button>",
-      "css": ".ds-btn-secondary { background: #ffffff; color: #334155; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; line-height: 1.5; padding: 12px 24px; border: 1px solid #ffedd5; border-radius: 9999px; cursor: pointer; transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1), transform 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-secondary:hover { background: #fff7ed; color: #ea580c; transform: translateY(-2px); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.4); }"
+      "css": ".ds-btn-secondary { background: #141414; color: #f5f5f5; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; line-height: 1.5; padding: 14px 32px; border: 1px solid #262626; border-radius: 9999px; cursor: pointer; transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-secondary:hover { transform: translateY(-2px); background: #1a1a1a; border-color: #737373; } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.4); }"
     },
     {
       "name": "Card",
       "kind": "card",
       "refersTo": "card",
-      "description": "Default content container with light border and subtle shadow.",
+      "description": "Default dark content container with thin border.",
       "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Card title</h3><p class=\"ds-card-body\">Card body text goes here.</p></div>",
-      "css": ".ds-card { background: #ffffff; color: #0f172a; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; border: 1px solid #ffedd5; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { transform: translateY(-4px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); } .ds-card-title { font-size: 1.125rem; font-weight: 600; line-height: 1.3; margin: 0 0 8px; } .ds-card-body { font-size: 1rem; font-weight: 400; line-height: 1.625; color: #64748b; margin: 0; }"
+      "css": ".ds-card { background: #141414; color: #f5f5f5; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; border: 1px solid #262626; border-radius: 1.5rem; padding: 28px; transition: border-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { border-color: #737373; } .ds-card-title { font-size: 1.25rem; font-weight: 600; line-height: 1.3; margin: 0 0 8px; } .ds-card-body { font-size: 1.125rem; font-weight: 400; line-height: 1.6; color: #a3a3a3; margin: 0; }"
     },
     {
       "name": "Chip",
@@ -119,58 +113,62 @@
       "refersTo": "chip",
       "description": "Small pill label for signals, tags, and categories.",
       "html": "<span class=\"ds-chip\">NEW_PAYEE</span>",
-      "css": ".ds-chip { display: inline-flex; align-items: center; background: #fff7ed; color: #ea580c; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 600; line-height: 1; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; border: 1px solid #ffedd5; border-radius: 9999px; }"
+      "css": ".ds-chip { display: inline-flex; align-items: center; background: rgba(249, 115, 22, 0.1); color: #f97316; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 600; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 9999px; }"
     },
     {
       "name": "Navigation Link",
       "kind": "nav",
       "refersTo": "nav-link",
-      "description": "Header navigation link with hover accent.",
+      "description": "Header navigation link with hover brightening.",
       "html": "<a href=\"#\" class=\"ds-nav-link\">How it works</a>",
-      "css": ".ds-nav-link { color: #334155; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.5; text-decoration: none; transition: color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-link:hover { color: #ea580c; } .ds-nav-link:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.4); border-radius: 4px; }"
+      "css": ".ds-nav-link { color: #a3a3a3; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.5; text-decoration: none; transition: color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-link:hover { color: #f5f5f5; } .ds-nav-link:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4); border-radius: 4px; }"
     },
     {
       "name": "Hero Warning Card",
       "kind": "custom",
       "refersTo": "hero-warning-card",
       "description": "Signature preview of the extension warning overlay shown in the hero.",
-      "html": "<div class=\"ds-hero-card\"><div class=\"ds-hero-card-header\"><span class=\"ds-hero-card-icon\">⚠</span><div><p class=\"ds-hero-card-title\">High-risk transfer blocked</p><p class=\"ds-hero-card-subtitle\">Sentinel screened this before it was sent</p></div><span class=\"ds-hero-card-score\">82 / 100</span></div><dl class=\"ds-hero-card-dl\"><div><dt>Recipient</dt><dd>MULE HOLDINGS 8829</dd></div><div><dt>Amount</dt><dd>MYR 4,900.00</dd></div><div><dt>Reference</dt><dd>(blank)</dd></div></dl><div class=\"ds-hero-card-chips\"><span class=\"ds-chip\">NEW_PAYEE</span><span class=\"ds-chip\">ROUND_CASHOUT</span></div><p class=\"ds-hero-card-body\">First-ever transfer to this recipient, at an amount far outside your normal pattern.</p></div>",
-      "css": ".ds-hero-card { background: #ffffff; color: #0f172a; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; border: 1px solid #ffedd5; border-radius: 12px; padding: 24px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); } .ds-hero-card-header { display: flex; align-items: center; gap: 12px; } .ds-hero-card-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 9999px; background: #fef2f2; color: #dc2626; font-size: 1.25rem; } .ds-hero-card-title { font-size: 1rem; font-weight: 700; line-height: 1.3; margin: 0; } .ds-hero-card-subtitle { font-size: 0.875rem; color: #64748b; margin: 0; } .ds-hero-card-score { margin-left: auto; border-radius: 9999px; background: #fef2f2; color: #dc2626; padding: 4px 12px; font-size: 0.875rem; font-weight: 700; } .ds-hero-card-dl { margin: 16px 0 0; padding: 16px; border-radius: 8px; background: #f8fafc; font-size: 0.875rem; } .ds-hero-card-dl > div { display: flex; justify-content: space-between; } .ds-hero-card-dl dt { color: #64748b; } .ds-hero-card-dl dd { font-weight: 600; color: #0f172a; margin: 0; } .ds-hero-card-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; } .ds-hero-card-body { font-size: 0.875rem; line-height: 1.625; color: #334155; margin: 16px 0 0; }"
+      "html": "<div class=\"ds-hero-card\"><div class=\"ds-hero-card-header\"><span class=\"ds-hero-card-icon\">⚠</span><div><p class=\"ds-hero-card-title\">High-risk transfer blocked</p><p class=\"ds-hero-card-subtitle\">Sentinel screened this before it was sent</p></div><span class=\"ds-hero-card-score\">82 / 100</span></div><dl class=\"ds-hero-card-dl\"><div><dt>Recipient</dt><dd>MULE HOLDINGS 8829</dd></div><div><dt>Amount</dt><dd>MYR 4,900.00</dd></div><div><dt>Reference</dt><dd>(blank)</dd></div></dl><div class=\"ds-hero-card-chips\"><span class=\"ds-chip\">NEW_PAYEE</span><span class=\"ds-chip\">ROUND_CASHOUT</span></div></div>",
+      "css": ".ds-hero-card { position: relative; background: #141414; color: #f5f5f5; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; border: 1px solid #262626; border-radius: 1.5rem; padding: 28px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); } .ds-hero-card::before { content: ''; position: absolute; inset: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.4), transparent); } .ds-hero-card-header { display: flex; align-items: center; gap: 16px; position: relative; } .ds-hero-card-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9999px; background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 1.25rem; } .ds-hero-card-title { font-size: 1rem; font-weight: 600; line-height: 1.3; margin: 0; color: #f5f5f5; } .ds-hero-card-subtitle { font-size: 0.875rem; color: #a3a3a3; margin: 0; } .ds-hero-card-score { margin-left: auto; border-radius: 9999px; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 6px 14px; font-size: 0.875rem; font-weight: 700; } .ds-hero-card-dl { margin: 20px 0 0; padding: 20px; border-radius: 1rem; background: #111111; font-size: 0.875rem; } .ds-hero-card-dl > div { display: flex; justify-content: space-between; } .ds-hero-card-dl dt { color: #737373; } .ds-hero-card-dl dd { font-weight: 500; color: #f5f5f5; margin: 0; } .ds-hero-card-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; } .ds-chip { display: inline-flex; align-items: center; background: rgba(249, 115, 22, 0.1); color: #f97316; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 600; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 9999px; }"
     }
   ],
   "narrative": {
     "northStar": "The Engine Room Door",
-    "overview": "Sentinel's visual system is the clean surface of a technical product. The interface feels simple at first glance — clear type, generous space, warm color — but the real machinery is visible through well-organized sections, honest data tables, and direct links to architecture and business-case evidence. The design says: this is built, this is understandable, and you can try it now. The atmosphere is warm and approachable, not alarmist. Safety orange is used as a confident accent, not a danger signal. Cards lift gently above a cool neutral background, giving the page a light, breathable structure. Motion is minimal and functional — hover lifts, smooth transitions, nothing choreographed.",
+    "overview": "Sentinel's visual system is a dark, technical surface with the warmth of a human guardrail. The interface feels premium and intentional — like a finely made tool — while the real machinery stays visible through honest data, signal tables, and direct architecture. The design says: this is built, this is understandable, and you can try it now. The atmosphere is confident and calm, not alarmist. A near-black void is the default ground, warm off-white text provides clarity, and safety orange appears only where it needs to command attention. Generous vertical space and large editorial type give every section room to breathe. Cards are dark, bordered, and quietly lifted — never white or shadow-heavy.",
     "keyCharacteristics": [
-      "Simple explanations before decoration.",
-      "Technical depth surfaced honestly, not hidden behind marketing fluff.",
-      "Safety orange as a rare, confident accent on a cool neutral ground.",
-      "Rounded-full CTAs and softly rounded cards (12px) feel friendly but decisive.",
-      "Light borders and small shadows create quiet layers without visual noise."
+      "Dark void ground (#0a0a0a) with warm neutral text.",
+      "Safety orange as a rare, high-signal accent.",
+      "Large, tight display type for editorial impact.",
+      "Generous whitespace and clear vertical rhythm.",
+      "Honest technical depth surfaced through tables and data.",
+      "No gradient text, no generic SaaS card grids, no tiny uppercase eyebrows."
     ],
     "rules": [
-      { "name": "The One Accent Rule", "body": "Safety orange should be the only saturated accent on any given screen. Its rarity is the point.", "section": "colors" },
-      { "name": "The Cool Ground Rule", "body": "The body background stays cool and neutral (#f8fafc). Warmth is carried by the orange accent and the friendly rounded shapes.", "section": "colors" },
+      { "name": "The One Accent Rule", "body": "Flame orange should be the only saturated accent on any given screen. Its rarity is the point.", "section": "colors" },
+      { "name": "The Void-First Rule", "body": "Surfaces start at #0a0a0a. Elevated cards sit at #141414. Only use white for text and small inverse accents, never as a card background.", "section": "colors" },
       { "name": "The One Typeface Rule", "body": "Plus Jakarta Sans carries every role. Weight and size provide hierarchy; no second font is needed or used.", "section": "typography" },
-      { "name": "The Readable Prose Rule", "body": "Body copy is set in ink-primary (#0f172a). Muted body text is permitted only for captions and metadata, never for long passages.", "section": "typography" },
-      { "name": "The Border-First Rule", "body": "Prefer a light safety-orange-lighter (#ffedd5) border to create separation before adding shadow.", "section": "elevation" }
+      { "name": "The Readable Prose Rule", "body": "Long body copy is set in milk (#f5f5f5). Muted text (#a3a3a3) is permitted only for captions and metadata, never for paragraphs.", "section": "typography" },
+      { "name": "The Border-First Rule", "body": "Prefer a thin ink-light (#262626) border to create separation before adding shadow.", "section": "elevation" }
     ],
     "dos": [
-      "Do use Safety Orange (#ea580c) as the only saturated accent on any screen.",
-      "Do keep body text in Ink Primary (#0f172a) for readability; use Ink Secondary (#64748b) only for captions and metadata.",
-      "Do use 12px radius for cards and rounded-full for buttons and chips.",
-      "Do prefer light safety-orange-lighter borders before adding shadow.",
-      "Do surface the architecture and business case as readable, evidence-driven sections.",
-      "Do keep the landing page scannable: one clear claim per section, then proof."
+      "Do use Void (#0a0a0a) as the default background.",
+      "Do use Milk (#f5f5f5) for primary text and Flame (#f97316) as the only saturated accent.",
+      "Do use large, tight display type for hero and section headings.",
+      "Do use thin ink-light borders to define cards and sections.",
+      "Do surface technical depth through honest tables, signal lists, and data.",
+      "Do keep the landing page scannable: one clear claim per section, then proof.",
+      "Do support prefers-reduced-motion by disabling animations."
     ],
     "donts": [
-      "Don't use enterprise fintech dashboard patterns — dense grids, tiny type, or navy-and-gold 'trust' palettes.",
-      "Don't use alarmist cybersecurity visuals — red-black urgency, skull icons, or fear-driven copy.",
-      "Don't use generic SaaS landing-page clichés — cream backgrounds, identical icon-card grids, gradient-text heroes, or tiny uppercase eyebrows on every section.",
-      "Don't over-polish with floating gradients, excessive motion, or copy that promises more than the product delivers.",
-      "Don't use side-stripe borders greater than 1px as a colored accent on cards or alerts.",
+      "Don't use white card backgrounds or light gray section backgrounds.",
+      "Don't use gradient text or decorative gradient backgrounds.",
+      "Don't use tiny uppercase eyebrows above every section.",
+      "Don't use identical icon-card grids repeated endlessly.",
+      "Don't use alarmist red-black urgency visuals or fear-driven copy.",
+      "Don't use generic SaaS landing-page clichés — cream backgrounds, navy-and-gold trust palettes, or floating gradient orbs.",
+      "Don't use side-stripe borders greater than 1px as a colored accent.",
       "Don't pair a 1px border with a wide soft shadow on the same element for decorative effect.",
-      "Don't use border-radius larger than 16px on cards or sections."
+      "Don't use border-radius larger than 1.5rem on major cards."
     ]
   }
 }
