@@ -7,7 +7,7 @@ const request_timeout_ms = 8000;
  * @property key The service-role key, used only on the server. It bypasses RLS,
  *               so it must never reach the browser or the extension.
  */
-interface SupabaseConfig {
+export interface SupabaseConfig {
   url: string;
   key: string;
 }
@@ -21,7 +21,7 @@ interface SupabaseConfig {
  *
  * @returns The configuration, or null when either value is missing.
  */
-function resolve_supabase_config(): SupabaseConfig | null {
+export function resolve_supabase_config(): SupabaseConfig | null {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
@@ -138,6 +138,46 @@ export async function upsert_dom_dump(row: {
     return response.ok;
   } catch (error) {
     console.error("[supabase] dom dump upsert failed:", error);
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Persists one signed-up user's profile so age-aware screening signals can read
+ * it later. Unlike transfer logging this is NOT best-effort: signup must fail
+ * loudly when the profile cannot be stored, so the caller receives the result.
+ *
+ * @param row The profile to insert: auth user id, full name, and birth year.
+ * @returns True when the insert succeeded, false otherwise.
+ */
+export async function insert_profile_record(row: {
+  id: string;
+  full_name: string;
+  birth_year: number;
+}): Promise<boolean> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return false;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const response = await fetch(`${config.url}/rest/v1/profiles`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { ...build_auth_headers(config.key), prefer: "return=minimal" },
+      body: JSON.stringify(row),
+    });
+    if (!response.ok) {
+      console.warn(`[supabase] profile insert HTTP ${response.status}.`);
+    }
+    return response.ok;
+  } catch (error) {
+    console.error("[supabase] profile insert failed:", error);
     return false;
   } finally {
     clearTimeout(timeout);

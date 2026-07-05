@@ -28,7 +28,35 @@ export interface ScreenContext {
 }
 
 /**
- * The AI's holistic verdict for one transfer.
+ * One finding from a deterministic specialist agent, forwarded verbatim to the
+ * AI adjudicator so it rules on the same evidence the fusion layer scores.
+ *
+ * @property agent  Which specialist produced the finding (risk/behaviour/anomaly).
+ * @property code   Stable machine identifier (e.g. "SCAM_KEYWORD").
+ * @property weight Points the finding contributed to the deterministic score.
+ * @property detail Human-readable description of what was observed.
+ */
+export interface SpecialistFinding {
+  agent: string;
+  code: string;
+  weight: number;
+  detail: string;
+}
+
+/**
+ * Everything the AI adjudicator sees for one transfer: the raw observed
+ * transfer, every specialist finding, and the deterministic score those
+ * findings fused into. Serialized whole into the prompt so nothing is hidden
+ * from the model.
+ */
+export interface AdjudicationInput {
+  transfer: ScreenContext;
+  specialist_findings: SpecialistFinding[];
+  deterministic_score: number;
+}
+
+/**
+ * The AI's adjudicated verdict for one transfer.
  *
  * @property risk_score Model-assigned risk in [0, 100].
  * @property advice     The action the user should take.
@@ -41,14 +69,16 @@ export interface AiScreenVerdict {
 }
 
 const system_prompt = [
-  "You are a fraud-screening AI for Malaysian bank and e-wallet transfers (DuitNow, Touch 'n Go, CIMB).",
-  "You receive the COMPLETE context of a single outbound transfer as JSON and must judge scam/fraud risk before the user sends it.",
-  "Weigh everything holistically: recipient name or account, amount, the reference/memo text, the channel, and timing.",
+  "You are the final fraud adjudicator for Malaysian bank and e-wallet transfers (DuitNow, Touch 'n Go, CIMB).",
+  "You receive a JSON object with the COMPLETE observed transfer, the findings already raised by deterministic specialist agents (scam-vocabulary rules, this recipient's history, population anomalies), and the risk score those findings fused into.",
+  "Your job is to adjudicate, not to guess independently: weigh the specialist findings together with the raw transfer details and deliver one coherent verdict.",
+  "You may disagree with the specialists, but your reason MUST explicitly address the highest-weight finding — never call a memo generic or a transfer clean while a finding contradicts that.",
+  "A small amount does NOT make a transfer safe: scammers probe with small test transfers, and memo wording (crypto, urgency, prizes, loans, investment returns) outweighs amount.",
   "Account for Malaysian scam patterns: fake investments, crypto, loan and prize scams, romance/impersonation, mule accounts, and any wording that signals the user was coached or is paying a stranger.",
   "Treat self-incriminating memo text (e.g. naming the recipient a scammer) as a strong risk signal, not a joke.",
-  "When prior_flag_count is present and greater than zero, this exact recipient was flagged as suspicious on earlier transfers; treat that as a strong risk signal that compounds with the rest.",
+  "When prior_flag_count is greater than zero, this exact recipient was flagged as suspicious before; treat that as a strong risk signal that compounds with the rest.",
   "Output ONLY a raw JSON object, no markdown and no code fences: {\"risk_score\":0-100,\"advice\":\"allow|warn|block\",\"reason\":string}.",
-  "Use allow for risk_score<30, warn for 30-69, block for 70+. Keep reason to one plain sentence the sender will read.",
+  "Use allow for risk_score<30, warn for 30-69, block for 70+. The reason must be one plain sentence the sender will read, and it must justify the risk_score you chose.",
 ].join(" ");
 
 const max_response_tokens = 250;
@@ -67,19 +97,19 @@ function extract_json_object(content: string): unknown {
 }
 
 /**
- * Screens a transfer by handing the AI the entire context and returning its
- * holistic verdict.
+ * Adjudicates a transfer by handing the AI the raw transfer, every specialist
+ * finding, and the deterministic score, then returning its holistic verdict.
  *
  * Fail-safe: on a missing key, timeout, transport error, or malformed response
- * it resolves to null so the caller can fall back rather than crash. JSON mode
- * is requested so the verdict parses reliably. Reuses the `KIMI_*` environment
- * configuration, which currently points at Groq.
+ * it resolves to null so the caller can fall back to the deterministic verdict
+ * rather than crash. JSON mode is requested so the verdict parses reliably.
+ * Reuses the `KIMI_*` environment configuration.
  *
- * @param context The complete observed transfer.
+ * @param input The transfer, specialist findings, and deterministic score.
  * @returns The AI verdict, or null when the model could not be consulted.
  */
-export async function ai_screen_transfer(
-  context: ScreenContext,
+export async function ai_adjudicate_transfer(
+  input: AdjudicationInput,
 ): Promise<AiScreenVerdict | null> {
   const api_key = process.env.KIMI_API_KEY;
   const base_url = process.env.KIMI_BASE_URL ?? default_base_url;
@@ -95,7 +125,9 @@ export async function ai_screen_transfer(
   const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
 
   try {
-    console.log(`[screen-ai] calling ${base_url} model=${model} for payee="${context.payee}"`);
+    console.log(
+      `[screen-ai] adjudicating via ${base_url} model=${model} payee="${input.transfer.payee}" findings=${input.specialist_findings.length}`,
+    );
     const response = await fetch(`${base_url}/chat/completions`, {
       method: "POST",
       signal: controller.signal,
@@ -107,9 +139,10 @@ export async function ai_screen_transfer(
         model,
         temperature,
         max_tokens: max_response_tokens,
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: system_prompt },
-          { role: "user", content: JSON.stringify(context, null, 2) },
+          { role: "user", content: JSON.stringify(input, null, 2) },
         ],
       }),
     });
@@ -131,7 +164,7 @@ export async function ai_screen_transfer(
     console.log(`[screen-ai] raw verdict: ${content}`);
     return verdict_schema.parse(extract_json_object(content));
   } catch (error) {
-    console.error("[screen-ai] screening error — falling back:", error);
+    console.error("[screen-ai] adjudication error — falling back:", error);
     return null;
   } finally {
     clearTimeout(timeout);

@@ -1,6 +1,7 @@
 import type { RiskSignal } from "@/lib/risk/types";
 import { call_supabase_rpc } from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
+import { coerce_finite_number } from "./numeric";
 import type { AgentReport, TransferContext } from "./types";
 
 const outlier_sigma = 2;
@@ -83,9 +84,9 @@ export async function run_anomaly_agent(context: TransferContext): Promise<Agent
   }
 
   const stats: AnomalyStats = {
-    population_mean: Number(raw.population_mean),
-    population_stddev: Number(raw.population_stddev),
-    recent_count: Number(raw.recent_count),
+    population_mean: coerce_finite_number(raw.population_mean),
+    population_stddev: coerce_finite_number(raw.population_stddev),
+    recent_count: coerce_finite_number(raw.recent_count),
   };
   const signals = score_anomaly(context, stats);
   log_event("anomaly-agent", "scored population stats", {

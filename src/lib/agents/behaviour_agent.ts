@@ -1,6 +1,7 @@
 import type { RiskSignal } from "@/lib/risk/types";
 import { call_supabase_rpc } from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
+import { coerce_finite_number } from "./numeric";
 import type { AgentReport, TransferContext } from "./types";
 
 const new_payee_weight = 18;
@@ -105,10 +106,15 @@ export async function fetch_behaviour_stats(
   if (!raw) {
     return null;
   }
+  if (raw.prior_flag_count === undefined) {
+    console.warn(
+      "[behaviour-agent] get_behaviour_stats returned no prior_flag_count — deployed DB function is stale; re-run docs/supabase_schema.sql.",
+    );
+  }
   return {
-    payee_count: Number(raw.payee_count),
-    payee_avg_amount: Number(raw.payee_avg_amount),
-    prior_flag_count: Number(raw.prior_flag_count),
+    payee_count: coerce_finite_number(raw.payee_count),
+    payee_avg_amount: coerce_finite_number(raw.payee_avg_amount),
+    prior_flag_count: coerce_finite_number(raw.prior_flag_count),
   };
 }
 

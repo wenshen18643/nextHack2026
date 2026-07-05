@@ -67,6 +67,18 @@ $$;
 grant execute on function public.get_behaviour_stats(text) to service_role;
 grant execute on function public.get_anomaly_stats(integer) to service_role;
 
+-- One profile row per signed-up user, keyed to the Supabase auth user. Stores
+-- the birth year that powers age-aware screening thresholds. Written by the
+-- signup route with the service-role key; no anon/public policy on purpose.
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  full_name text not null,
+  birth_year integer not null check (birth_year between 1900 and 2100),
+  created_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
 -- Latest captured DOM snapshot per bank site/frame, used to write precise
 -- site adapters. Upserted on (site, frame_slug) so only the newest dump per
 -- page is kept. Service-role only, same as transfers.

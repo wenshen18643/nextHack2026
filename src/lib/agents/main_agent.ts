@@ -1,7 +1,11 @@
 import type { FirewallState, RiskSignal } from "@/lib/risk/types";
-import { fuse_risk_score, summarize_reason } from "@/lib/risk/fusion";
+import { apply_ai_adjudication, fuse_risk_score, summarize_reason } from "@/lib/risk/fusion";
 import { derive_firewall_state } from "@/lib/risk/state_machine";
-import { ai_screen_transfer } from "@/lib/screen/ai_screener";
+import {
+  ai_adjudicate_transfer,
+  type AiScreenVerdict,
+  type SpecialistFinding,
+} from "@/lib/screen/ai_screener";
 import { insert_transfer_record } from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
 import { run_risk_agent } from "./risk_agent";
@@ -27,7 +31,7 @@ export type ScreenAdvice = "allow" | "warn" | "block";
  * @property reason  One-line explanation shown to the user.
  * @property signals Every signal that contributed, across all agents.
  * @property agents  Per-agent signal breakdown for explainability.
- * @property ai_used Whether the AI specialist contributed a signal.
+ * @property ai_used Whether the AI adjudicator contributed to the verdict.
  */
 export interface MainAgentResult {
   advice: ScreenAdvice;
@@ -51,6 +55,45 @@ function derive_advice_from_state(state: FirewallState): ScreenAdvice {
     return "allow";
   }
   return "warn";
+}
+
+/**
+ * Flattens the specialist reports into the finding list handed to the AI
+ * adjudicator, tagged with the agent that raised each one.
+ */
+function collect_specialist_findings(reports: AgentReport[]): SpecialistFinding[] {
+  return reports.flatMap((report) =>
+    report.signals.map((signal) => ({
+      agent: report.agent,
+      code: signal.code,
+      weight: signal.weight,
+      detail: signal.detail,
+    })),
+  );
+}
+
+/**
+ * Chooses the one-line explanation shown to the user.
+ *
+ * The AI's reason is used only when its advice agrees with the final advice, so
+ * the card can never carry a warning frame with an "appears low risk" body (or
+ * the reverse). On disagreement or AI unavailability the explanation comes from
+ * the deterministic signals that actually drove the verdict.
+ *
+ * @param final_advice          The advice derived from the final fused score.
+ * @param ai_verdict            The AI adjudication, if one was obtained.
+ * @param deterministic_signals The specialist signals behind the score.
+ * @returns A single sentence consistent with the final advice.
+ */
+function choose_user_reason(
+  final_advice: ScreenAdvice,
+  ai_verdict: AiScreenVerdict | null,
+  deterministic_signals: RiskSignal[],
+): string {
+  if (ai_verdict && ai_verdict.advice === final_advice) {
+    return ai_verdict.reason;
+  }
+  return summarize_reason(deterministic_signals);
 }
 
 /**
@@ -79,11 +122,13 @@ async function log_screened_transfer(
 /**
  * Main agent: orchestrates the specialist agents and decides the outcome.
  *
- * Fans out to the risk, behaviour, and anomaly agents and the AI specialist in
- * parallel, collects their signals, fuses them into a single score (the AI layer
- * is weighted slightly higher so it can tip borderline cases without solely
- * deciding them), maps that score to a firewall state, and derives the advice.
- * The transfer is then logged so the history-driven agents improve over time.
+ * Runs in two phases. Phase one fans out to the deterministic risk, behaviour,
+ * and anomaly specialists in parallel and fuses their signals into a
+ * deterministic score. Phase two hands the AI adjudicator the complete picture —
+ * the raw transfer, every specialist finding, and that score — so it rules on
+ * the same evidence rather than guessing blind; its verdict then pulls the score
+ * a bounded distance in either direction. The transfer is logged afterwards so
+ * the history-driven agents improve over time.
  *
  * @param context The complete observed transfer.
  * @returns The fused advice, score, state, reason, and per-agent breakdown.
@@ -102,47 +147,56 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
     prior_flag_count: behaviour_stats?.prior_flag_count ?? 0,
   };
 
-  const [risk_report, behaviour_report, anomaly_report, ai_verdict] = await Promise.all([
+  const [risk_report, behaviour_report, anomaly_report] = await Promise.all([
     run_risk_agent(enriched_context),
     run_behaviour_agent(enriched_context, behaviour_stats),
     run_anomaly_agent(enriched_context),
-    ai_screen_transfer(enriched_context),
   ]);
 
-  const ai_signal: RiskSignal | null = ai_verdict
-    ? {
-        layer: "ai",
-        code: "AI_HOLISTIC",
-        weight: ai_verdict.risk_score,
-        detail: ai_verdict.reason,
-      }
-    : null;
+  const agents = [risk_report, behaviour_report, anomaly_report];
+  const deterministic_signals = agents.flatMap((report) => report.signals);
+  const deterministic_score = fuse_risk_score(deterministic_signals);
 
-  log_event("main-agent", "agents reported", {
+  log_event("main-agent", "specialists reported", {
     risk: summarize_signals(risk_report.signals),
     behaviour: summarize_signals(behaviour_report.signals),
     anomaly: summarize_signals(anomaly_report.signals),
-    ai: ai_signal ? `AI_HOLISTIC(${ai_signal.weight})` : "unavailable",
+    deterministic_score,
   });
 
-  const agents = [risk_report, behaviour_report, anomaly_report];
-  const signals = [
-    ...risk_report.signals,
-    ...behaviour_report.signals,
-    ...anomaly_report.signals,
-    ...(ai_signal ? [ai_signal] : []),
-  ];
+  const ai_verdict = await ai_adjudicate_transfer({
+    transfer: enriched_context,
+    specialist_findings: collect_specialist_findings(agents),
+    deterministic_score,
+  });
 
-  const score = fuse_risk_score(signals);
+  let score = deterministic_score;
+  let ai_signal: RiskSignal | null = null;
+  if (ai_verdict) {
+    const { final_score, ai_adjustment } = apply_ai_adjudication(
+      deterministic_score,
+      ai_verdict.risk_score,
+    );
+    score = final_score;
+    ai_signal = {
+      layer: "ai",
+      code: "AI_ADJUDICATION",
+      weight: ai_adjustment,
+      detail: ai_verdict.reason,
+    };
+  }
+
   const state = derive_firewall_state(score);
   const advice = derive_advice_from_state(state);
-  const reason = ai_verdict?.reason ?? summarize_reason(signals);
+  const reason = choose_user_reason(advice, ai_verdict, deterministic_signals);
+  const signals = [...deterministic_signals, ...(ai_signal ? [ai_signal] : [])];
 
   log_event("main-agent", "verdict", {
     score,
     state,
     advice,
     ai_used: ai_signal !== null,
+    ai_adjustment: ai_signal?.weight ?? 0,
     reason,
   });
 
