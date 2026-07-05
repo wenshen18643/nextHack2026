@@ -21,7 +21,7 @@ import com.sentinel.wallet.model.ScreenResult
  * swaps to a result card with Cancel / Send anyway actions. It never blocks or
  * automates the underlying wallet; the user must still make the final decision.
  */
-class WarningOverlay(context: Context) {
+class WarningOverlay(private val context: Context) {
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var currentView: View? = null

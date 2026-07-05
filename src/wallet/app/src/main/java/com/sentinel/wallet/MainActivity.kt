@@ -7,7 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
-import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun isAccessibilityServiceEnabled(): Boolean {
         val manager = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val services = manager.getEnabledAccessibilityServiceList(AccessibilityService.FEEDBACK_ALL_MASK)
+        val services = manager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
         return services.any { it.resolveInfo.serviceInfo.packageName == packageName }
     }
 

@@ -93,7 +93,7 @@ class SentinelAccessibilityService : AccessibilityService() {
     }
 
     private fun isTargetPackage(packageName: String): Boolean {
-        return packageName == TNG_PACKAGE || packageName == BuildConfig.APPLICATION_ID
+        return packageName == TNG_PACKAGE || packageName == this.packageName
     }
 
     override fun onInterrupt() {
