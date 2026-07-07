@@ -145,7 +145,7 @@ The final score maps to a graduated firewall state: PASS (<30) → INSPECT
 allow / warn / warn / block. The verdict carries the advice, score, one-line
 reason, and the per-agent signal breakdown — full explainability, no black box.
 
-### 8. Persistence (`docs/supabase_schema.sql`, service-role only, RLS locked)
+### 8. Persistence (`supabase_schema.sql`, service-role only, RLS locked)
 
 | Table | Written by | Read by |
 |---|---|---|

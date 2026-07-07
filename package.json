@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node --input-type=module -e \"import { copyFileSync, existsSync } from 'fs'; const s='docs/05-demo/demo.mp4', d='public/demo.mp4'; if (existsSync(s)) { copyFileSync(s,d); console.log('Copied demo video'); }\"",
     "dev": "next dev",
+    "prebuild": "node --input-type=module -e \"import { copyFileSync, existsSync } from 'fs'; const s='docs/05-demo/demo.mp4', d='public/demo.mp4'; if (existsSync(s)) { copyFileSync(s,d); console.log('Copied demo video'); }\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

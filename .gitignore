@@ -51,6 +51,9 @@ coverage/
 *.log
 image.png
 
+# Generated demo video copy (canonical version lives in docs/05-demo/)
+public/demo.mp4
+
 # Claude agent memory (not part of the product)
 memory/
 

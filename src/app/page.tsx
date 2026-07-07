@@ -310,7 +310,7 @@ export default function HomePage() {
       </section>
 
       {/* Demo video */}
-      {existsSync(join(process.cwd(), "public", "demo.mp4")) && (
+      {existsSync(join(process.cwd(), "docs", "05-demo", "demo.mp4")) && (
         <section id="demo-video" className="scroll-mt-20 bg-void-soft">
           <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
             <div className="text-center">

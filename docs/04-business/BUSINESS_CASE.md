@@ -44,7 +44,7 @@ from cross-institution data sharing.
 Honest framing: no public statistic isolates "victim moved from bank A's
 website to bank B's website mid-scam." We do not claim one. The engine does not
 depend on it either: nine of Sentinel's ten deterministic signals fire on a
-single-platform transfer (see `docs/ARCHITECTURE.md`), and the shared
+single-platform transfer (see [`../03-engineering/ARCHITECTURE.md`](../03-engineering/ARCHITECTURE.md)), and the shared
 blocklist plus cross-bank payee memory are *additive* coverage that no
 single-bank control can replicate — the same structural gap the National Fraud
 Portal addresses on the interbank side, addressed on the customer's screen.
