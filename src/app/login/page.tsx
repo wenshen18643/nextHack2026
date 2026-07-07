@@ -7,7 +7,10 @@ import { ShieldCheck } from "lucide-react";
 type AuthMode = "sign_in" | "sign_up";
 
 const input_class =
-  "mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-ink-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1";
+  "mt-1.5 w-full rounded-xl border border-ink-lighter bg-void-soft px-4 py-3 text-milk placeholder:text-milk-muted transition-colors focus:border-flame focus:outline-none focus:ring-1 focus:ring-flame";
+
+const mode_tab_base =
+  "rounded-full py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame";
 
 /**
  * Sends the form payload to the given auth endpoint and returns the error
@@ -77,119 +80,137 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col px-4 py-16 sm:px-6">
-      <div className="text-center">
-        <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-brand-600 to-amber-500 text-white">
-          <ShieldCheck className="h-6 w-6" aria-hidden />
-        </span>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink-900">
-          {mode === "sign_in" ? "Welcome back" : "Create your Sentinel account"}
-        </h1>
-        <p className="mt-2 text-sm text-ink-500">
-          {mode === "sign_in"
-            ? "Sign in to manage your protection."
-            : "One minute of setup, calibrated protection for life."}
-        </p>
-      </div>
-
-      <div className="mt-8 rounded-xl border border-brand-100 bg-white p-6 shadow-sm">
-        <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-50 p-1 text-sm font-semibold">
-          <button
-            type="button"
-            onClick={() => switch_mode("sign_in")}
-            className={
-              mode === "sign_in"
-                ? "rounded-md bg-white py-2 text-brand-600 shadow-sm"
-                : "rounded-md py-2 text-ink-500 transition-colors hover:text-brand-600"
-            }
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            onClick={() => switch_mode("sign_up")}
-            className={
-              mode === "sign_up"
-                ? "rounded-md bg-white py-2 text-brand-600 shadow-sm"
-                : "rounded-md py-2 text-ink-500 transition-colors hover:text-brand-600"
-            }
-          >
-            Create account
-          </button>
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_-10%,rgba(249,115,22,0.12),transparent)]" />
+      <div className="relative mx-auto flex min-h-[calc(100dvh-65px)] w-full max-w-md flex-col justify-center px-4 py-16 sm:px-6">
+        <div className="text-center">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-flame text-white">
+            <ShieldCheck className="h-6 w-6" aria-hidden />
+          </span>
+          <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-milk">
+            {mode === "sign_in" ? "Welcome back" : "Create your Sentinel account"}
+          </h1>
+          <p className="mt-2 text-milk-muted">
+            {mode === "sign_in"
+              ? "Sign in to manage your protection."
+              : "One minute of setup, calibrated protection for life."}
+          </p>
         </div>
 
-        <form onSubmit={handle_submit} className="mt-6 space-y-4">
-          {mode === "sign_up" ? (
-            <>
-              <label className="block">
-                <span className="text-sm font-semibold text-ink-700">Full name</span>
-                <input
-                  name="full_name"
-                  required
-                  minLength={2}
-                  autoComplete="name"
-                  className={input_class}
-                  placeholder="Aisyah binti Rahman"
-                />
-              </label>
-              <label className="block">
-                <span className="text-sm font-semibold text-ink-700">Birth year</span>
-                <input
-                  name="birth_year"
-                  required
-                  type="number"
-                  inputMode="numeric"
-                  min={1900}
-                  max={new Date().getFullYear() - 13}
-                  autoComplete="bday-year"
-                  className={input_class}
-                  placeholder="1962"
-                />
-                <span className="mt-1 block text-xs leading-relaxed text-ink-500">
-                  Used only to calibrate protection — scammers target older adults with different
-                  playbooks, and Sentinel adjusts its thresholds accordingly.
-                </span>
-              </label>
-            </>
-          ) : null}
-          <label className="block">
-            <span className="text-sm font-semibold text-ink-700">Email</span>
-            <input
-              name="email"
-              required
-              type="email"
-              autoComplete="email"
-              className={input_class}
-              placeholder="you@example.com"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-ink-700">Password</span>
-            <input
-              name="password"
-              required
-              type="password"
-              minLength={mode === "sign_up" ? 8 : 1}
-              autoComplete={mode === "sign_up" ? "new-password" : "current-password"}
-              className={input_class}
-              placeholder={mode === "sign_up" ? "At least 8 characters" : "Your password"}
-            />
-          </label>
-
-          {error ? (
-            <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
-              {error}
-            </p>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-full bg-gradient-to-r from-brand-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-60"
+        <div className="mt-9 rounded-3xl border border-ink-lighter bg-void-lift p-7">
+          <div
+            role="tablist"
+            aria-label="Authentication mode"
+            className="grid grid-cols-2 gap-1 rounded-full bg-void p-1 text-sm font-semibold"
           >
-            {submitting ? "Working…" : mode === "sign_in" ? "Sign in" : "Create account"}
-          </button>
-        </form>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "sign_in"}
+              onClick={() => switch_mode("sign_in")}
+              className={
+                mode === "sign_in"
+                  ? `${mode_tab_base} border border-ink-lighter bg-void-lift text-milk`
+                  : `${mode_tab_base} text-milk-muted hover:text-milk`
+              }
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "sign_up"}
+              onClick={() => switch_mode("sign_up")}
+              className={
+                mode === "sign_up"
+                  ? `${mode_tab_base} border border-ink-lighter bg-void-lift text-milk`
+                  : `${mode_tab_base} text-milk-muted hover:text-milk`
+              }
+            >
+              Create account
+            </button>
+          </div>
+
+          <form onSubmit={handle_submit} className="mt-7 space-y-5">
+            {mode === "sign_up" ? (
+              <>
+                <label className="block">
+                  <span className="text-sm font-medium text-milk-dim">Full name</span>
+                  <input
+                    name="full_name"
+                    required
+                    minLength={2}
+                    autoComplete="name"
+                    className={input_class}
+                    placeholder="Aisyah binti Rahman"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-milk-dim">Birth year</span>
+                  <input
+                    name="birth_year"
+                    required
+                    type="number"
+                    inputMode="numeric"
+                    min={1900}
+                    max={new Date().getFullYear() - 13}
+                    autoComplete="bday-year"
+                    className={input_class}
+                    placeholder="1962"
+                  />
+                  <span className="mt-2 block text-xs leading-relaxed text-milk-muted">
+                    Used only to calibrate protection — scammers target older adults with
+                    different playbooks, and Sentinel adjusts its thresholds accordingly.
+                  </span>
+                </label>
+              </>
+            ) : null}
+            <label className="block">
+              <span className="text-sm font-medium text-milk-dim">Email</span>
+              <input
+                name="email"
+                required
+                type="email"
+                autoComplete="email"
+                className={input_class}
+                placeholder="you@example.com"
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-milk-dim">Password</span>
+              <input
+                name="password"
+                required
+                type="password"
+                minLength={mode === "sign_up" ? 8 : 1}
+                autoComplete={mode === "sign_up" ? "new-password" : "current-password"}
+                className={input_class}
+                placeholder={mode === "sign_up" ? "At least 8 characters" : "Your password"}
+              />
+            </label>
+
+            {error ? (
+              <p
+                role="alert"
+                className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
+              >
+                {error}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-full bg-flame px-8 py-3.5 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-flame-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame focus-visible:ring-offset-2 focus-visible:ring-offset-void-lift disabled:pointer-events-none disabled:opacity-60"
+            >
+              {submitting ? "Working…" : mode === "sign_in" ? "Sign in" : "Create account"}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-sm text-milk-faint">
+          Warns before the money moves. Never freezes your account.
+        </p>
       </div>
     </div>
   );
