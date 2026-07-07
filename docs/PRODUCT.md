@@ -18,7 +18,7 @@ They arrive with low attention and some anxiety about scams. They need clarity f
 Sentinel Scam Shield is a browser extension that warns people **before** they send money to a likely scam. The website's job is to:
 1. Communicate the problem and the product in one scroll.
 2. Make the underlying technology (multi-agent AI screening, risk signals, compliance posture) feel understandable, not opaque.
-3. Drive visitors to install the extension or try the live demo bank.
+3. Drive visitors to install the extension.
 4. Present the business case and architecture as credible, judge-ready evidence.
 
 Success means a visitor can land on the site, understand the product, and try it within 60 seconds.

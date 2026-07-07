@@ -93,9 +93,9 @@ const market_sizes = [
 const adoption_steps = [
   {
     phase: "Now",
-    title: "Pro extension + demo bank",
+    title: "Pro extension",
     detail:
-      "Prove detection quality in public; grow the shared blocklist and cross-bank payee memory — the data moat.",
+      "Prove detection quality with early users; grow the shared blocklist and cross-bank payee memory — the data moat.",
   },
   {
     phase: "Next",

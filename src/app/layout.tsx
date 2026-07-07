@@ -78,9 +78,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/business-case" className="transition-colors hover:text-milk">
                 Business Case
               </Link>
-              <Link href="/demo-bank" className="transition-colors hover:text-milk">
-                Demo Bank
-              </Link>
             </nav>
             {session_user ? <SignedInActions full_name={session_user.full_name} /> : <SignedOutActions />}
           </div>

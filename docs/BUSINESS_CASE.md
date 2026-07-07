@@ -96,7 +96,7 @@ Assumptions are stated so the math can be checked:
 
 ## 6. Adoption path and compliance
 
-1. **Now — free tier + demo bank.** Prove detection quality in public; grow
+1. **Now — free tier.** Prove detection quality with early users; grow
    the shared blocklist and cross-bank payee memory (the data moat).
 2. **Next — paid tiers + Family mode.** Convert through the age-aware
    protection story; partner with consumer bodies and senior-citizen

@@ -209,20 +209,17 @@ function find_largest_ringgit_amount() {
  */
 function read_transfer_from_form_inputs() {
   const amount_raw = read_first_value([
-    "[data-sentinel-amount]",
     "input[name*=amount i]",
     "input[id*=amount i]",
     "input[placeholder*=amount i]",
   ]);
   const payee = read_first_value([
-    "[data-sentinel-payee]",
     "input[name*=payee i]",
     "input[name*=recipient i]",
     "input[id*=account i]",
     "input[placeholder*=recipient i]",
   ]);
   const memo = read_first_value([
-    "[data-sentinel-memo]",
     "input[name*=reference i]",
     "input[name*=memo i]",
     "input[id*=description i]",
@@ -253,12 +250,8 @@ function read_transfer_from_review_page() {
  * the entry form and the pre-OTP review step are covered without site config.
  */
 const generic_adapter = {
-  send_button_selector:
-    "button, input[type=submit], input[type=button], [role=button], [data-sentinel-send]",
+  send_button_selector: "button, input[type=submit], input[type=button], [role=button]",
   is_send_button(button) {
-    if (button.hasAttribute("data-sentinel-send")) {
-      return true;
-    }
     const label = ("value" in button && button.value ? button.value : button.textContent) || "";
     return send_button_text_pattern.test(label) && !blocked_button_text_pattern.test(label);
   },
@@ -395,23 +388,7 @@ const hlb_adapter = {
   },
 };
 
-/**
- * Adapter for the local demo bank page, which exposes explicit data attributes
- * so the demo is deterministic regardless of styling.
- */
-const demo_adapter = {
-  send_button_selector: "[data-sentinel-send]",
-  read_transfer() {
-    return {
-      payee: read_first_value(["[data-sentinel-payee]"]),
-      amount: Number(read_first_value(["[data-sentinel-amount]"]).replace(/[^0-9.]/g, "")),
-      memo: read_first_value(["[data-sentinel-memo]"]),
-    };
-  },
-};
-
 const adapters_by_host = {
-  "localhost": demo_adapter,
   "cimbclicks.com.my": cimb_adapter,
   "hongleongconnect.my": hlb_adapter,
 };

@@ -126,7 +126,7 @@ const install_steps = [
   {
     icon: ShieldCheck,
     title: "Load unpacked → extension/",
-    detail: "Click “Load unpacked”, select the extension/ folder, then try the Demo Bank.",
+    detail: "Click “Load unpacked”, select the extension/ folder, then visit your bank.",
   },
 ];
 
@@ -206,16 +206,6 @@ export default function HomePage() {
                     aria-hidden
                   />
                 </Link>
-                <Link
-                  href="/demo-bank"
-                  className="group inline-flex items-center gap-2 rounded-full border border-ink-lighter bg-void-lift px-8 py-4 font-semibold text-milk transition-all duration-200 hover:border-milk-faint hover:bg-void-hover"
-                >
-                  Try the live demo
-                  <ArrowRight
-                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                    aria-hidden
-                  />
-                </Link>
               </div>
               <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-milk-muted">
                 <span className="flex items-center gap-2">
@@ -274,13 +264,6 @@ export default function HomePage() {
               <p className="mt-5 max-w-md text-lg leading-relaxed text-milk-muted">
                 Everything happens in your browser, on the bank page you already use.
               </p>
-              <Link
-                href="/demo-bank"
-                className="mt-8 inline-flex items-center gap-2 rounded-full border border-ink-lighter bg-void-lift px-6 py-3 font-semibold text-milk transition-all duration-200 hover:border-milk-faint hover:bg-void-hover"
-              >
-                See it on the Demo Bank
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
             </div>
             <div className="space-y-10">
               <div className="group flex gap-6">
@@ -520,13 +503,6 @@ export default function HomePage() {
                 The hackathon build ships as an unpacked Chrome extension. Four steps and the shield
                 is live on every supported bank page.
               </p>
-              <Link
-                href="/demo-bank"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-flame px-7 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-flame-deep"
-              >
-                Try the Demo Bank
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
             </div>
             <div className="grid gap-6">
               {install_steps.map((step, index) => (

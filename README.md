@@ -17,7 +17,6 @@ https://canva.link/cd78rs35llu63hu
 - [Prerequisites](#prerequisites)
 - [Run it locally (for developers)](#run-it-locally-for-developers)
 - [Usage](#usage)
-  - [Run the demo](#run-the-demo)
   - [Call the screening API directly](#call-the-screening-api-directly)
 - [Configuration](#configuration)
 - [Project structure](#project-structure)
@@ -47,7 +46,7 @@ Authorized-push-payment (APP) scams — fake investments, impersonation, "urgent
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  Bank / wallet website  (CIMB Clicks, or the demo bank)    │
+│  Bank / wallet website  (CIMB Clicks)                      │
 │  user clicks “Send money”                                  │
 └─────────────────┬─────────────────────────────────────────┘
                   │  content.js intercepts the click (capture phase)
@@ -77,8 +76,6 @@ The screening service is **already hosted** at [`next-hack2026.vercel.app`](http
 4. Click **Load unpacked**.
 5. Select the **`extension/`** folder.
 6. Done — the 🛡️ Sentinel icon appears in your toolbar.
-
-To try it, open the live demo bank: **https://next-hack2026.vercel.app/demo-bank**, enter a suspicious transfer (e.g. recipient `Crypto Ventures`, amount `9000`, reference `urgent investment`), and click **Send money**. You'll see the AI warning before it "sends."
 
 > **Sharing it:** zip the `extension/` folder and send it. Whoever unzips it repeats steps 2–5 above. Because the backend is hosted, the zip works for them with zero configuration.
 
@@ -111,14 +108,6 @@ npm run dev          # serves http://localhost:3000
 Load the extension as in [Install it](#install-it-no-setup). To point it at your **local** server instead of the hosted one, change `default_api_base` in `extension/background.js` back to `http://localhost:3000`, or set `api_base` in `chrome.storage.sync`.
 
 ## Usage
-
-### Run the demo
-
-1. Open the hosted demo bank: **https://next-hack2026.vercel.app/demo-bank** (or `http://localhost:3000/demo-bank` if running locally)
-2. Enter a suspicious transfer, e.g. recipient `Crypto Ventures`, amount `9000`, reference `urgent investment`
-3. Click **Send money**
-
-You'll see a brief **"AI is checking…"** spinner, then a red **scam warning** with the AI's reasoning — before the transfer "completes." A normal transfer (e.g. `Mak Cik Nasi Lemak`, `12`, `breakfast`) passes straight through.
 
 ### Call the screening API directly
 
@@ -173,7 +162,6 @@ extension/                 # Chrome MV3 extension (load this unpacked)
   overlay.css              #   warning + spinner styles
 src/
   app/api/screen/route.ts  # POST /api/screen — the screening endpoint (CORS-enabled)
-  app/demo-bank/page.tsx   # a mock bank page for safe demos
   app/page.tsx             # landing page
   lib/screen/
     ai_screener.ts         #   AI-first screener (full-context prompt)
