@@ -142,7 +142,7 @@ export default function BusinessCasePage() {
             The business case for prevention
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-relaxed text-milk-dim">
-            Sentinel is a B2C-first freemium browser extension sold directly to the people losing the
+            Sentinel is a B2C-first subscription browser extension sold directly to the people losing the
             money. This page lays out the market evidence, pricing, sizing, unit economics, adoption
             path, and compliance posture the product ships with.
           </p>
@@ -363,7 +363,7 @@ export default function BusinessCasePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mx-auto max-w-3xl">
             <h2 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-milk sm:text-5xl">
-              Free now, paid next, aligned later
+              Prove now, scale next, embed later
             </h2>
           </div>
           <ol className="mt-12 grid gap-6 md:grid-cols-3">
