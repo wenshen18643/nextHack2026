@@ -257,12 +257,18 @@ export default function HomePage() {
           <div className="grid gap-16 lg:grid-cols-2 lg:gap-24">
             <div>
               <h2 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-milk sm:text-5xl">
-                Three steps.
+                Install once.
                 <br />
-                Zero bank paperwork.
+                Bank like you always do.
               </h2>
               <p className="mt-5 max-w-md text-lg leading-relaxed text-milk-muted">
-                Everything happens in your browser, on the bank page you already use.
+                No new app, no new habits. Add Sentinel to Chrome, then make transfers on your
+                bank&apos;s website exactly as you always have — every Send click is screened
+                automatically, in three steps you never have to think about.
+              </p>
+              <p className="mt-4 max-w-md text-lg leading-relaxed text-milk-muted">
+                When a transfer looks normal, Sentinel stays silent and lets it through. You only
+                hear from it when something is off.
               </p>
             </div>
             <div className="space-y-10">
@@ -274,7 +280,8 @@ export default function HomePage() {
                   <p className="text-sm font-semibold uppercase tracking-wide text-milk-faint">01</p>
                   <h3 className="mt-1 text-xl font-semibold text-milk">Intercept</h3>
                   <p className="mt-2 leading-relaxed text-milk-muted">
-                    Catches the Send click before it submits — no bank integration required.
+                    You click Send as normal. Sentinel catches the click before it submits — no
+                    bank integration required.
                   </p>
                 </div>
               </div>
@@ -299,8 +306,8 @@ export default function HomePage() {
                   <p className="text-sm font-semibold uppercase tracking-wide text-milk-faint">03</p>
                   <h3 className="mt-1 text-xl font-semibold text-milk">Warn</h3>
                   <p className="mt-2 leading-relaxed text-milk-muted">
-                    A clear card explains exactly why the transfer looks risky. Cancel or proceed —
-                    the choice is always yours.
+                    Only if the transfer looks risky, a clear card appears and explains exactly
+                    why. Cancel or proceed — the choice is always yours.
                   </p>
                 </div>
               </div>
