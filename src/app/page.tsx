@@ -74,22 +74,8 @@ const detection_signals = [
 
 const pricing_tiers = [
   {
-    name: "Free",
-    price: "RM0",
-    period: "forever",
-    tagline: "Core protection for one bank.",
-    highlighted: false,
-    features: [
-      "1 supported bank",
-      "Deterministic rule screening",
-      "Warning overlay before you send",
-      "Scam keyword vocabulary",
-    ],
-    cta: "Start free",
-  },
-  {
-    name: "Plus",
-    price: "RM9",
+    name: "Pro",
+    price: "RM9.90",
     period: "/month",
     tagline: "The full multi-agent shield.",
     highlighted: true,
@@ -97,24 +83,27 @@ const pricing_tiers = [
       "All supported banks",
       "Full multi-agent AI screening",
       "Cross-bank payee memory",
+      "Shared scam-account blocklist",
       "Velocity & odd-hour signals",
       "Explainable verdict card",
     ],
-    cta: "Subscribe to Plus",
+    cta: "Upgrade in the extension",
+    href: "#install",
   },
   {
-    name: "Family",
-    price: "RM19",
-    period: "/month",
-    tagline: "Protect the people scammers target most.",
+    name: "Enterprise",
+    price: "Contact us",
+    period: "",
+    tagline: "The same engine inside your bank's transfer flow.",
     highlighted: false,
     features: [
-      "Everything in Plus",
-      "Up to 5 family profiles",
-      "Age-aware protection mode",
-      "Family alert on high-risk warnings",
+      "Server-side screening API",
+      "Shared blocklist feed",
+      "Per-screened-transaction pricing",
+      "Volume tiers & SLA",
     ],
-    cta: "Protect my family",
+    cta: "Contact us",
+    href: "mailto:wenshen18643@gmail.com?subject=Sentinel%20Enterprise",
   },
 ];
 
@@ -464,11 +453,11 @@ export default function HomePage() {
               Protection that costs less than one scam
             </h2>
             <p className="mt-5 text-lg leading-relaxed text-milk-muted">
-              Malaysians reported over RM1.2 billion in scam losses in a single year. Sentinel starts
-              at RM0.
+              Malaysians reported over RM1.2 billion in scam losses in a single year. Sentinel Pro
+              costs RM9.90 a month.
             </p>
           </div>
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
+          <div className="mx-auto mt-16 grid max-w-4xl gap-6 md:grid-cols-2">
             {pricing_tiers.map((tier) => (
               <div
                 key={tier.name}
@@ -489,7 +478,7 @@ export default function HomePage() {
                   <span className="text-5xl font-extrabold tracking-tight text-milk">
                     {tier.price}
                   </span>
-                  <span className="ml-1 text-milk-muted">{tier.period}</span>
+                  {tier.period ? <span className="ml-1 text-milk-muted">{tier.period}</span> : null}
                 </p>
                 <ul className="mt-8 space-y-4 text-sm text-milk-dim">
                   {tier.features.map((feature) => (
@@ -500,7 +489,7 @@ export default function HomePage() {
                   ))}
                 </ul>
                 <Link
-                  href="#install"
+                  href={tier.href}
                   className={
                     tier.highlighted
                       ? "mt-8 block rounded-full bg-flame px-5 py-3.5 text-center font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-flame-deep"
@@ -513,8 +502,8 @@ export default function HomePage() {
             ))}
           </div>
           <p className="mt-12 text-center text-sm text-milk-faint">
-            Hackathon build: subscribing installs the extension in Chrome developer mode — no payment
-            is collected.
+            Pro checkout runs live through Stripe inside the extension popup — sign in, upgrade,
+            done.
           </p>
         </div>
       </section>
