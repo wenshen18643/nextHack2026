@@ -22,7 +22,14 @@ const signup_schema = z.object({
  * Builds the success response carrying the httpOnly session cookie.
  */
 function respond_with_session(outcome: Extract<AuthOutcome, { ok: true }>): NextResponse {
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json({
+    ok: true,
+    user: {
+      user_id: outcome.user_id,
+      email: outcome.email,
+      full_name: outcome.full_name,
+    },
+  });
   response.cookies.set(
     session_cookie_name,
     JSON.stringify({

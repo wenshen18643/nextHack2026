@@ -14,7 +14,8 @@ const pro_product_name = "Sentinel Scam Shield Pro";
  *          degrade to a clear "billing unavailable" response.
  */
 export function resolve_stripe_secret_key(): string | null {
-  return process.env.STRIPE_SECRET_KEY || null;
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  return key || null;
 }
 
 /**

@@ -3,8 +3,8 @@
  * 1. Settings — binds the site-adapter checkbox and backend override to
  *    chrome.storage.sync; the content script and background worker read these
  *    live, no page reload needed.
- * 2. Account — email/password sign-in against the screening backend, with the
- *    returned identity stored in chrome.storage.sync.
+ * 2. Account — email/password sign-in or registration against the screening
+ *    backend, with the returned identity stored in chrome.storage.sync.
  * 3. Billing — starts a Stripe Checkout for the Pro upgrade in a new tab and
  *    reflects the entitlement from GET /api/billing/status.
  */
@@ -20,10 +20,15 @@ const api_base_input = document.getElementById("api-base");
 const api_base_status = document.getElementById("api-base-status");
 const signed_out_section = document.getElementById("signed-out");
 const signed_in_section = document.getElementById("signed-in");
+const name_field = document.getElementById("name-field");
+const birth_year_field = document.getElementById("birth-year-field");
+const signup_name_input = document.getElementById("signup-name");
+const signup_birth_year_input = document.getElementById("signup-birth-year");
 const login_email_input = document.getElementById("login-email");
 const login_password_input = document.getElementById("login-password");
 const login_button = document.getElementById("login-button");
 const login_status = document.getElementById("login-status");
+const mode_toggle = document.getElementById("mode-toggle");
 const account_email_label = document.getElementById("account-email");
 const plan_badge = document.getElementById("plan-badge");
 const upgrade_button = document.getElementById("upgrade-button");
@@ -117,21 +122,69 @@ async function refresh_plan(account) {
   }
 }
 
-login_button.addEventListener("click", async () => {
+let auth_mode = "sign_in";
+
+/**
+ * Repaints the signed-out form for the active mode: registration reveals the
+ * name and birth-year fields and relabels the buttons.
+ */
+function render_auth_mode() {
+  const signing_up = auth_mode === "sign_up";
+  name_field.classList.toggle("hidden", !signing_up);
+  birth_year_field.classList.toggle("hidden", !signing_up);
+  login_button.textContent = signing_up ? "Create account" : "Sign in";
+  mode_toggle.textContent = signing_up
+    ? "Have an account? Sign in"
+    : "New here? Create account";
+  login_status.textContent = "";
+}
+
+mode_toggle.addEventListener("click", () => {
+  auth_mode = auth_mode === "sign_in" ? "sign_up" : "sign_in";
+  render_auth_mode();
+});
+
+/**
+ * Validates the signed-out form for the active mode and builds the request.
+ * @returns {{path: string, payload: object} | {error: string}} The request, or a form error.
+ */
+function build_auth_request() {
   const email = login_email_input.value.trim();
   const password = login_password_input.value;
   if (!email || !password) {
-    login_status.textContent = "Enter your email and password.";
+    return { error: "Enter your email and password." };
+  }
+  if (auth_mode === "sign_in") {
+    return { path: "/api/auth/login", payload: { email, password } };
+  }
+  const full_name = signup_name_input.value.trim();
+  const birth_year = Number(signup_birth_year_input.value);
+  if (full_name.length < 2) {
+    return { error: "Enter your full name." };
+  }
+  if (!Number.isInteger(birth_year) || birth_year < 1900) {
+    return { error: "Enter a valid birth year." };
+  }
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+  return { path: "/api/auth/signup", payload: { email, password, full_name, birth_year } };
+}
+
+login_button.addEventListener("click", async () => {
+  const request = build_auth_request();
+  if (request.error) {
+    login_status.textContent = request.error;
     login_status.className = "error";
     return;
   }
   login_button.disabled = true;
-  login_status.textContent = "Signing in…";
+  login_status.textContent = auth_mode === "sign_up" ? "Creating account…" : "Signing in…";
   login_status.className = "";
 
-  const result = await call_backend("/api/auth/login", {
+  const result = await call_backend(request.path, {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(request.payload),
   });
   login_button.disabled = false;
 
@@ -141,7 +194,7 @@ login_button.addEventListener("click", async () => {
     return;
   }
   if (result.status !== 200 || !result.json.ok || !result.json.user) {
-    login_status.textContent = result.json.error || "Sign-in failed.";
+    login_status.textContent = result.json.error || "Something went wrong. Try again.";
     login_status.className = "error";
     return;
   }

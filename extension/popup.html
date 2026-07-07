@@ -120,6 +120,14 @@
 
   <h2>Account</h2>
   <div id="signed-out">
+    <label class="field hidden" id="name-field">
+      <span>Full name</span>
+      <input type="text" id="signup-name" autocomplete="name" />
+    </label>
+    <label class="field hidden" id="birth-year-field">
+      <span>Birth year</span>
+      <input type="number" id="signup-birth-year" min="1900" autocomplete="bday-year" />
+    </label>
     <label class="field">
       <span>Email</span>
       <input type="email" id="login-email" autocomplete="username" />
@@ -130,6 +138,7 @@
     </label>
     <button id="login-button">Sign in</button>
     <p id="login-status"></p>
+    <button id="mode-toggle" class="linklike">New here? Create account</button>
   </div>
   <div id="signed-in" class="hidden">
     <div class="account-row">
