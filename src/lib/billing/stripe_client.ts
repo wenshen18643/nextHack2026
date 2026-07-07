@@ -26,8 +26,8 @@ export type CheckoutOutcome =
   | { ok: false; error: string };
 
 /**
- * Creates a Stripe Checkout Session for the one-time Pro upgrade using inline
- * price data, so no product needs to exist in the Stripe dashboard.
+ * Creates a Stripe Checkout Session for the monthly Pro subscription using
+ * inline price data, so no product needs to exist in the Stripe dashboard.
  *
  * The Supabase user id travels as client_reference_id and comes back on the
  * webhook, which is how the payment is tied to the right profile row.
@@ -47,7 +47,7 @@ export async function create_pro_checkout_session(details: {
   }
 
   const form = new URLSearchParams({
-    mode: "payment",
+    mode: "subscription",
     client_reference_id: details.user_id,
     customer_email: details.email,
     success_url: `${details.site_origin}/billing/result?state=success`,
@@ -55,6 +55,7 @@ export async function create_pro_checkout_session(details: {
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": pro_price_currency,
     "line_items[0][price_data][unit_amount]": String(pro_price_amount_cents),
+    "line_items[0][price_data][recurring][interval]": "month",
     "line_items[0][price_data][product_data][name]": pro_product_name,
   });
 

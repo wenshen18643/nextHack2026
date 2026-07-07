@@ -12,7 +12,7 @@ const headline_stats = [
   { value: "RM2.97B", label: "online fraud losses in Malaysia, 2025" },
   { value: "67,735", label: "online crime cases, Jan–Nov 2025" },
   { value: "<0.2%", label: "funds recovered by the national mechanism" },
-  { value: "RM108", label: "cost of one year of Plus protection" },
+  { value: "RM119", label: "cost of one year of Pro protection" },
 ];
 
 const loss_facts = [
@@ -56,20 +56,16 @@ const loss_facts = [
 
 const pricing_tiers = [
   {
-    name: "Free",
-    price: "RM0",
-    detail: "Core rule screening, one bank, warning overlay.",
-  },
-  {
-    name: "Plus",
-    price: "RM9/month",
+    name: "Pro",
+    price: "RM9.90/month",
     detail:
-      "All supported banks, full multi-agent AI screening, cross-bank payee memory, velocity and odd-hour signals.",
+      "Everything, one price: all supported banks, full multi-agent AI screening, cross-bank payee memory, shared scam blocklist, velocity and odd-hour signals. Paid in-extension via Stripe.",
   },
   {
-    name: "Family",
-    price: "RM19/month",
-    detail: "Plus for up to 5 profiles, age-aware protection mode, family alert on high-risk warnings.",
+    name: "Enterprise",
+    price: "Contact us",
+    detail:
+      "The same screening engine embedded at a bank's transfer-confirmation step: server-side API, shared blocklist feed, per-screened-transaction pricing with volume tiers.",
   },
 ];
 
@@ -78,32 +74,32 @@ const market_sizes = [
     label: "TAM",
     figure: "RM2+ billion/year",
     detail:
-      "Malaysia has roughly 20+ million adult online-banking users. At full Plus pricing, the theoretical subscription ceiling bounds the space.",
+      "Malaysia has roughly 20+ million adult online-banking users. At full Pro pricing, the theoretical subscription ceiling bounds the space.",
   },
   {
     label: "SAM",
-    figure: "~RM190 million/year",
+    figure: "~RM238 million/year",
     detail:
-      "Desktop/browser banking users in scam-vulnerable households who can install a Chrome extension: ~2 million users at a blended RM8/month.",
+      "Desktop/browser banking users in scam-vulnerable households who can install a Chrome extension: ~2 million users at RM9.90/month.",
   },
   {
     label: "SOM (year 1)",
-    figure: "~RM264,000 ARR",
+    figure: "~RM238,000 ARR",
     detail:
-      "20,000 installs via NSRC-adjacent publicity, personal finance media, and family word-of-mouth; 10% paid conversion at blended RM11/month.",
+      "20,000 installs via NSRC-adjacent publicity, personal finance media, and family word-of-mouth; 10% paid conversion at RM9.90/month.",
   },
 ];
 
 const adoption_steps = [
   {
     phase: "Now",
-    title: "Free tier + demo bank",
+    title: "Pro extension + demo bank",
     detail:
       "Prove detection quality in public; grow the shared blocklist and cross-bank payee memory — the data moat.",
   },
   {
     phase: "Next",
-    title: "Paid tiers + Family mode",
+    title: "Pro subscriptions at scale",
     detail:
       "Convert through the age-aware protection story; partner with consumer bodies and senior-citizen organizations for distribution.",
   },
@@ -273,13 +269,14 @@ export default function BusinessCasePage() {
       <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-milk sm:text-5xl">
-            Freemium, priced against the cost of one mistake
+            One price, set against the cost of one mistake
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-milk-muted">
-            Current build: no payment gateway; subscribing routes to the extension install flow.
+            Current build: Pro checkout runs live through Stripe from the extension popup;
+            Enterprise starts with a conversation.
           </p>
         </div>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
           {pricing_tiers.map((tier) => (
             <div
               key={tier.name}
@@ -291,11 +288,13 @@ export default function BusinessCasePage() {
             </div>
           ))}
         </div>
-        <div className="mt-6 rounded-3xl border border-flame/30 bg-flame-faint p-7">
+        <div className="mx-auto mt-6 max-w-4xl rounded-3xl border border-flame/30 bg-flame-faint p-7">
           <p className="leading-relaxed text-milk-dim">
-            <strong className="text-milk">Family is the wedge.</strong> Scammers systematically
-            target older adults, and the buyer (adult child) is not the user (parent) — a classic
-            guardianship purchase with low churn.
+            <strong className="text-milk">The extension is the wedge.</strong> Every consumer
+            screen grows the shared blocklist and cross-bank payee memory — the data moat an
+            Enterprise bank integration buys into. Scammers systematically target older adults,
+            and the buyer (adult child) is often not the user (parent) — a guardianship purchase
+            with low churn.
           </p>
         </div>
       </section>
@@ -343,7 +342,7 @@ export default function BusinessCasePage() {
             <h3 className="mt-5 font-semibold text-milk">Average loss per reported case</h3>
             <p className="mt-2 leading-relaxed text-milk-muted">
               RM2.97 billion ÷ 67,735 cases ≈ <strong className="text-milk">RM43,800</strong>. A year
-              of Plus costs RM108 — a 400:1 payoff if it prevents a single median incident.
+              of Pro costs RM119 — a ~370:1 payoff if it prevents a single median incident.
             </p>
           </div>
           <div className="rounded-3xl border border-ink-lighter bg-void-lift p-7">
@@ -352,7 +351,7 @@ export default function BusinessCasePage() {
             <p className="mt-2 leading-relaxed text-milk-muted">
               Marginal cost per screen is one LLM adjudication call (fractions of a sen on current
               DeepSeek-class pricing) plus negligible Postgres reads. The deterministic path costs
-              effectively nothing and runs even when the AI is down. Gross margin at Plus pricing is
+              effectively nothing and runs even when the AI is down. Gross margin at Pro pricing is
               software-typical (&gt;85%) at any realistic screening volume.
             </p>
           </div>
