@@ -101,6 +101,12 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- Pro entitlement, written by the Stripe webhook after a successful Checkout
+-- payment. stripe_customer_id lets support trace a payment back to Stripe.
+alter table public.profiles add column if not exists is_pro boolean not null default false;
+alter table public.profiles add column if not exists stripe_customer_id text;
+alter table public.profiles add column if not exists pro_since timestamptz;
+
 -- Latest captured DOM snapshot per bank site/frame, used to write precise
 -- site adapters. Upserted on (site, frame_slug) so only the newest dump per
 -- page is kept. Service-role only, same as transfers.

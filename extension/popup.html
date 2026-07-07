@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: system-ui, sans-serif;
-      width: 260px;
+      width: 280px;
       margin: 0;
       padding: 14px;
       color: #0f172a;
@@ -14,6 +14,13 @@
     h1 {
       font-size: 14px;
       margin: 0 0 10px;
+    }
+    h2 {
+      font-size: 12px;
+      margin: 16px 0 8px;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     label {
       display: flex;
@@ -45,10 +52,96 @@
       color: #64748b;
       margin: 8px 0 0;
     }
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 7px 0;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #0f172a;
+      color: #ffffff;
+    }
+    button.upgrade {
+      background: #ea580c;
+    }
+    button.linklike {
+      background: none;
+      color: #64748b;
+      font-weight: 400;
+      text-decoration: underline;
+      padding: 2px 0;
+      margin-top: 6px;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge.pro {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+    .badge.free {
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .account-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .account-email {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .error {
+      color: #dc2626;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>Sentinel Scam Shield</h1>
+
+  <h2>Account</h2>
+  <div id="signed-out">
+    <label class="field">
+      <span>Email</span>
+      <input type="email" id="login-email" autocomplete="username" />
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input type="password" id="login-password" autocomplete="current-password" />
+    </label>
+    <button id="login-button">Sign in</button>
+    <p id="login-status"></p>
+  </div>
+  <div id="signed-in" class="hidden">
+    <div class="account-row">
+      <span class="account-email" id="account-email"></span>
+      <span class="badge free" id="plan-badge">Free</span>
+    </div>
+    <button id="upgrade-button" class="upgrade">Upgrade to Pro — RM9.90</button>
+    <p id="billing-status"></p>
+    <button id="signout-button" class="linklike">Sign out</button>
+  </div>
+
+  <h2>Settings</h2>
   <label>
     <input type="checkbox" id="use-site-adapters" />
     <span>Use site-specific adapters</span>

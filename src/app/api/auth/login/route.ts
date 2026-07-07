@@ -25,7 +25,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: false, error: outcome.error }, { status: 401 });
   }
 
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json({
+    ok: true,
+    user: {
+      user_id: outcome.user_id,
+      email: outcome.email,
+      full_name: outcome.full_name,
+    },
+  });
   response.cookies.set(
     session_cookie_name,
     JSON.stringify({

@@ -341,6 +341,99 @@ export async function insert_profile_record(row: {
   }
 }
 
+/**
+ * Reads one user's Pro entitlement flag by Supabase auth user id.
+ *
+ * Fail-safe: configuration gaps, timeouts, and HTTP errors resolve to null so
+ * callers can distinguish "not pro" from "could not check".
+ *
+ * @param user_id The Supabase auth user id.
+ * @returns True/false when the profile was found, null when unavailable.
+ */
+export async function fetch_pro_status(user_id: string): Promise<boolean | null> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const query = new URLSearchParams({
+      id: `eq.${user_id}`,
+      select: "is_pro",
+      limit: "1",
+    });
+    const response = await fetch(`${config.url}/rest/v1/profiles?${query}`, {
+      signal: controller.signal,
+      headers: build_auth_headers(config.key),
+    });
+    if (!response.ok) {
+      console.warn(`[supabase] pro status lookup HTTP ${response.status} — skipping.`);
+      return null;
+    }
+    const rows = (await response.json()) as Array<{ is_pro: boolean }>;
+    return rows[0] ? rows[0].is_pro === true : null;
+  } catch (error) {
+    console.error("[supabase] pro status lookup failed — skipping:", error);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Marks one user's profile as Pro after a verified Stripe payment.
+ *
+ * NOT best-effort: the webhook must know whether the entitlement was stored so
+ * Stripe can retry delivery on failure.
+ *
+ * @param user_id            The Supabase auth user id from client_reference_id.
+ * @param stripe_customer_id The Stripe customer id from the Checkout Session.
+ * @returns True when exactly this profile row was updated, false otherwise.
+ */
+export async function mark_profile_pro(
+  user_id: string,
+  stripe_customer_id: string | null,
+): Promise<boolean> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return false;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const query = new URLSearchParams({ id: `eq.${user_id}` });
+    const response = await fetch(`${config.url}/rest/v1/profiles?${query}`, {
+      method: "PATCH",
+      signal: controller.signal,
+      headers: {
+        ...build_auth_headers(config.key),
+        prefer: "return=representation",
+      },
+      body: JSON.stringify({
+        is_pro: true,
+        stripe_customer_id,
+        pro_since: new Date().toISOString(),
+      }),
+    });
+    if (!response.ok) {
+      console.warn(`[supabase] mark pro HTTP ${response.status}.`);
+      return false;
+    }
+    const rows = (await response.json()) as unknown[];
+    return rows.length === 1;
+  } catch (error) {
+    console.error("[supabase] mark pro failed:", error);
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function insert_transfer_record(row: Record<string, unknown>): Promise<void> {
   const config = resolve_supabase_config();
   if (!config) {
