@@ -56,15 +56,17 @@ Freemium subscription, priced against the cost of one mistake:
 | Tier | Price | What it buys |
 |---|---|---|
 | **Free** | RM0 | Core rule screening, one bank, warning overlay |
-| **Plus** | RM9/month | All supported banks, full multi-agent AI screening, cross-bank payee memory, velocity and odd-hour signals |
-| **Family** | RM19/month | Plus, for up to 5 profiles, age-aware protection mode, family alert on high-risk warnings |
+| **Pro** | RM9.90/month | All supported banks, full multi-agent AI screening, cross-bank payee memory, shared scam blocklist, velocity and odd-hour signals |
+| **Enterprise** | Contact us | The same engine embedded at a bank's transfer-confirmation step: server-side API, shared blocklist feed, per-screened-transaction pricing with volume tiers |
 
-The Family tier is the wedge into the highest-pain segment: scammers
-systematically target older adults, and the buyer (adult child) is not the
-user (parent) — a classic guardianship purchase with low churn.
+Pro is the wedge into the highest-pain segment: scammers systematically target
+older adults, and the buyer (adult child) is often not the user (parent) — a
+guardianship purchase with low churn. Enterprise is the long-term B2B route;
+it is already surfaced on the landing page for bank and fintech inquiries.
 
-Current build: no payment gateway; subscribing routes to the extension install
-flow. Pricing is live on the landing page.
+Current build: Pro checkout runs live through Stripe from the extension popup.
+The billing flow (`/api/billing/checkout`, Stripe Checkout Session, webhook
+verification, and `/api/billing/status`) is implemented and tested.
 
 ## 4. Market sizing
 
@@ -72,39 +74,39 @@ Assumptions are stated so the math can be checked:
 
 - **TAM.** RM2.97 billion in annual scam losses is the pain budget. As a
   subscription market: Malaysia has roughly 20+ million adult online-banking
-  users (BNM reports internet-banking penetration above 100% of population on
-  a subscription basis). At full Plus pricing that is a theoretical
-  RM2+ billion/year subscription ceiling — quoted only to bound the space.
+  users. At full Pro pricing that is a theoretical RM2+ billion/year
+  subscription ceiling — quoted only to bound the space.
 - **SAM.** Desktop/browser banking users in scam-vulnerable households who can
   install a Chrome extension: assume 10% of online-banking adults ≈ 2 million
-  users. At a blended RM8/month ≈ **RM190 million/year**.
+  users. At RM9.90/month ≈ **RM238 million/year**.
 - **SOM (year 1).** 20,000 installs via NSRC-adjacent publicity, personal
-  finance media, and family word-of-mouth; 10% paid conversion at blended
-  RM11/month ≈ **RM264,000 ARR**. Small, honest, and enough to prove
+  finance media, and family word-of-mouth; 10% paid conversion at
+  RM9.90/month ≈ **RM238,000 ARR**. Small, honest, and enough to prove
   detection quality and retention for the next stage.
 
 ## 5. Unit economics
 
 - Average loss per reported case, 2025: RM2.97 billion ÷ 67,735 cases ≈
-  **RM43,800**. A year of Plus costs RM108 — a 400:1 payoff if it prevents a
+  **RM43,800**. A year of Pro costs RM119 — a ~370:1 payoff if it prevents a
   single median incident.
 - Marginal cost per screen is one LLM adjudication call (fractions of a sen on
   current DeepSeek-class pricing) plus negligible Postgres reads; the
   deterministic path costs effectively nothing and runs even when the AI is
-  down. Gross margin at Plus pricing is software-typical (>85%) at any
+  down. Gross margin at Pro pricing is software-typical (>85%) at any
   realistic screening volume.
 
 ## 6. Adoption path and compliance
 
-1. **Now — free tier.** Prove detection quality with early users; grow
+1. **Now — Pro extension.** Prove detection quality with early users; grow
    the shared blocklist and cross-bank payee memory (the data moat).
-2. **Next — paid tiers + Family mode.** Convert through the age-aware
+2. **Next — Pro subscriptions at scale.** Convert through the age-aware
    protection story; partner with consumer bodies and senior-citizen
    organizations for distribution.
-3. **Later — institutional alignment.** The blocklist and screening engine
-   align with the National Fraud Portal direction (BNM + PayNet + banks,
-   [TNG eWallet already onboard](https://fintechnews.my/46575/big-data/national-fraud-portal-trace-funds/));
-   Sentinel's consumer-side data is complementary, not competing.
+3. **Later — institutional alignment + Enterprise.** The blocklist and
+   screening engine align with the National Fraud Portal direction (BNM + PayNet
+   + banks, [TNG eWallet already onboard](https://fintechnews.my/46575/big-data/national-fraud-portal-trace-funds/));
+   Sentinel's consumer-side data is complementary, not competing. Enterprise
+   embeds the same engine at banks' transfer-confirmation steps.
 
 **PDPA.** Sentinel collects one demographic field (birth year), with purpose
 stated at the point of collection, used solely to calibrate protection
@@ -124,5 +126,6 @@ pre-transaction fraud friction.
 The same screening engine embedded at a bank's transfer-confirmation step
 (server-side API, per-screened-transaction pricing with volume tiers) is the
 larger long-term business: banks gain full account history and device signals,
-and the consumer extension's blocklist becomes a consortium feed. Deliberately
-out of current messaging; revisit after the B2C detection track record exists.
+and the consumer extension's blocklist becomes a consortium feed. This
+Enterprise tier is already surfaced on the landing page; the current focus is
+proving B2C detection quality before expanding bank integrations.

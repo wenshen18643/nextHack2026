@@ -21,4 +21,4 @@ A strong demo captures the core moment:
 - The Sentinel overlay appearing with the risk score and reasoning.
 - The user cancelling the transfer.
 
-Keep the recipient, amount, and reference realistic for a Malaysian scam pattern (e.g. “Crypto Ventures”, RM 9,000, “urgent investment”).
+Keep the recipient and amount realistic for a Malaysian scam pattern (e.g. “MULE HOLDINGS 8829”, RM 9,000). For the reference, use something innocuous or leave it blank — this proves Sentinel is not relying on scam keywords and that the amount, timing, history, and population signals still fire.

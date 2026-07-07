@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-const default_base_url = "https://api.moonshot.cn/v1";
-const default_model = "moonshot-v1-8k";
+const default_base_url = "https://api.deepseek.com/v1";
+const default_model = "deepseek-chat";
 const default_temperature = 0.2;
 const request_timeout_ms = 20000;
 

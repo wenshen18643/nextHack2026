@@ -40,7 +40,7 @@ const config: Config = {
       },
       borderRadius: {
         "2xl": "1rem",
-        "3xl": "1.25rem",
+        "3xl": "1.5rem",
       },
       letterSpacing: {
         tighter: "-0.04em",

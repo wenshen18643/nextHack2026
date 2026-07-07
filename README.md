@@ -33,10 +33,10 @@ https://canva.link/cd78rs35llu63hu
 Sentinel Scam Shield is a **Chrome (Manifest V3) extension** plus a small **Next.js screening service**. When a user is about to send money on a supported bank or e-wallet website, the extension:
 
 1. **Intercepts** the "Send" click before it submits,
-2. Sends the **complete transfer context** (recipient, amount, reference/memo) to an AI,
+2. Sends the **complete transfer context** (recipient, amount, reference/memo) to a multi-agent risk engine,
 3. Shows a clear **warning overlay** if the transfer looks like a scam — so the user can cancel before the money leaves.
 
-It is **AI-first**: the AI sees the whole transfer and makes the call. A small set of deterministic keyword rules exists only as a fallback for when the AI is unreachable, so a dead API key never silently waves everything through.
+The engine is **not a keyword filter**. Three specialist agents screen in parallel — risk (history-free rules), behaviour (recipient history + shared blocklist), and anomaly (population outliers + velocity) — and fuse their signals into a deterministic score. An LLM adjudicator then rules on the evidence and can tip borderline cases, but it is bounded so it can never override strong deterministic signals or blocklist hits.
 
 ## Why it matters
 
@@ -45,26 +45,31 @@ Authorized-push-payment (APP) scams — fake investments, impersonation, "urgent
 ## How it works
 
 ```
-┌───────────────────────────────────────────────────────────┐
-│  Bank / wallet website  (CIMB Clicks)                      │
-│  user clicks “Send money”                                  │
-└─────────────────┬─────────────────────────────────────────┘
-                  │  content.js intercepts the click (capture phase)
-                  │  reads payee / amount / memo via a per-bank adapter
-                  ▼
-          ┌───────────────┐        ┌──────────────────────────────┐
-          │ background.js │ ─────▶ │  Next.js  POST /api/screen     │
-          └───────────────┘        │   ├─ ai_screener  (AI-first)   │ → DeepSeek
-                  ▲                 │   └─ cold_rules   (fallback)   │
-                  │                 └──────────────┬───────────────┘
-                  │  verdict: allow | warn | block │
-                  ◀────────────────────────────────┘
-                  │
-   allow ───────▶ let the transfer proceed untouched
-   warn / block ▶ show warning overlay → user cancels or proceeds
+┌─────────────────────────────────────────────────────────────┐
+│  Bank / wallet website  (CIMB Clicks / Maybank2u / etc.)     │
+│  user clicks “Send money”                                    │
+└───────────────────┬─────────────────────────────────────────┘
+                    │  content.js intercepts the click (capture phase)
+                    │  reads payee / amount / memo via a per-bank adapter
+                    ▼
+            ┌───────────────┐        ┌──────────────────────────────┐
+            │ background.js │ ─────▶ │  Next.js  POST /api/screen     │
+            └───────────────┘        │  ┌─ main_agent fans out to:   │
+                    ▲                │  │   • risk_agent             │
+                    │                │  │   • behaviour_agent        │
+                    │                │  │   • anomaly_agent          │
+                    │                │  └─ deterministic fusion ───▶ │
+                    │                │  ┌─ AI adjudicator (bounded)  │ → DeepSeek
+                    │                │  └─ state machine             │
+                    │                └──────────────┬───────────────┘
+                    │  verdict: allow | warn | block │
+                    ◀────────────────────────────────┘
+                    │
+     allow ───────▶ let the transfer proceed untouched
+     warn / block ▶ show warning overlay → user cancels or proceeds
 ```
 
-The AI receives the entire transfer as JSON, so adding a new observed field automatically makes it part of the model's reasoning. Per-bank field selectors are the **only** thing that changes between banks, and they live in one file (`extension/site_adapters.js`).
+The risk engine receives the whole transfer plus any enriched history, so adding a new observed field automatically improves every layer's reasoning. Per-bank field selectors are the **only** thing that changes between banks, and they live in one file (`extension/site_adapters.js`).
 
 ## Install it (no setup)
 
@@ -116,17 +121,26 @@ The extension is just a client of one endpoint. You can hit it yourself:
 ```bash
 curl -s https://next-hack2026.vercel.app/api/screen \
   -H "content-type: application/json" \
-  -d '{"payee":"Crypto Ventures","amount":9000,"memo":"urgent investment guaranteed returns"}'
+  -d '{"payee":"MULE HOLDINGS 8829","amount":9000,"memo":""}'
 ```
 
-Example response:
+Example response (deterministic agents fire even with a blank memo):
 
 ```json
 {
   "advice": "block",
-  "score": 88,
-  "reason": "The large amount combined with guaranteed-returns investment language matches a common Malaysian scam pattern.",
-  "signals": [],
+  "score": 82,
+  "state": "DENY",
+  "reason": "Recipient is on the shared scam-account blocklist, and the amount is far outside normal patterns.",
+  "signals": [
+    { "layer": "behavioral", "code": "KNOWN_FLAGGED_ACCOUNT", "weight": 80, "detail": "Recipient is on the shared scam-account blocklist..." },
+    { "layer": "rules", "code": "HIGH_ABSOLUTE_AMOUNT", "weight": 22, "detail": "Large transfer of 9000." }
+  ],
+  "agents": [
+    { "agent": "risk", "signals": [...] },
+    { "agent": "behaviour", "signals": [...] },
+    { "agent": "anomaly", "signals": [...] }
+  ],
   "ai_used": true
 }
 ```
@@ -135,8 +149,11 @@ Example response:
 |-------|---------|
 | `advice` | `allow` (let it through), `warn`, or `block` |
 | `score` | Risk score `0–100` |
+| `state` | `PASS` / `INSPECT` / `QUARANTINE` / `DENY` |
 | `reason` | One-sentence explanation shown to the user |
-| `ai_used` | `true` if the AI decided, `false` if the fallback rules did |
+| `signals` | Every signal that contributed to the score |
+| `agents` | Per-agent breakdown for explainability |
+| `ai_used` | `true` if the AI adjudicator contributed |
 
 ## Configuration
 
@@ -160,15 +177,29 @@ extension/                 # Chrome MV3 extension (load this unpacked)
   background.js            #   calls the screening API
   site_adapters.js         #   per-bank field selectors (the only per-bank file)
   overlay.css              #   warning + spinner styles
+  popup.html / popup.js    #   account, settings, and Pro Stripe checkout
 src/
-  app/api/screen/route.ts  # POST /api/screen — the screening endpoint (CORS-enabled)
-  app/page.tsx             # landing page
+  app/
+    api/screen/route.ts    # POST /api/screen — the screening endpoint (CORS-enabled)
+    api/billing/*          #   Stripe Checkout + webhook + status
+    api/auth/*             #   signup / login / logout
+    page.tsx               #   landing page
+    business-case/page.tsx #   market evidence, pricing, sizing
+  lib/agents/
+    main_agent.ts          #   orchestrates the specialist agents + AI adjudicator
+    risk_agent.ts          #   history-free rules (amount, timing, text)
+    behaviour_agent.ts     #   recipient history + shared scam blocklist
+    anomaly_agent.ts       #   population outliers + velocity
+    types.ts               #   TransferContext, AgentReport
   lib/screen/
-    ai_screener.ts         #   AI-first screener (full-context prompt)
-    service.ts             #   orchestration + fallback
-    cold_rules.ts          #   deterministic keyword fallback
-  lib/risk/                # shared scoring utilities (types, fusion, state machine)
-docs/                      # hackathon requirements
+    ai_screener.ts         #   LLM adjudicator (full-context prompt)
+    service.ts             #   API entry point that builds context and runs main_agent
+    cold_rules.ts          #   deterministic history-free rules
+  lib/risk/                #   score fusion, state machine, shared types
+  lib/billing/             #   Stripe client and helpers
+  lib/db/                  #   Supabase client + RPCs
+  lib/auth/                #   session + profile helpers
+docs/                      # judge-ready product, design, engineering, business docs
 ```
 
 ## Testing
