@@ -32,22 +32,35 @@ describe("score_cold_rules", () => {
     expect(signals.some((signal) => signal.code === "SCAM_KEYWORD")).toBe(true);
   });
 
-  it("flags a transfer observed in the late-night window", () => {
-    const late_night = new Date(2026, 0, 15, 2, 30).toISOString();
+  it("flags a transfer observed in the Malaysian late-night window", () => {
+    const late_night = "2026-01-15T02:30:00+08:00";
     const signals = score_cold_rules({ payee: "John Tan", amount: 300, observed_at: late_night });
 
     expect(signals.some((signal) => signal.code === "ODD_HOUR_TRANSFER")).toBe(true);
   });
 
-  it("does not flag a daytime transfer", () => {
-    const midday = new Date(2026, 0, 15, 13, 0).toISOString();
+  it("flags a UTC timestamp that falls in the Malaysian late-night window", () => {
+    const late_night_utc = "2026-01-14T17:26:00.000Z";
+    const signals = score_cold_rules({
+      payee: "John Tan",
+      amount: 300,
+      observed_at: late_night_utc,
+    });
+    const timing = signals.find((signal) => signal.code === "ODD_HOUR_TRANSFER");
+
+    expect(timing).toBeDefined();
+    expect(timing!.detail).toContain("01:00 Malaysia time");
+  });
+
+  it("does not flag a Malaysian daytime transfer", () => {
+    const midday = "2026-01-15T13:00:00+08:00";
     const signals = score_cold_rules({ payee: "John Tan", amount: 300, observed_at: midday });
 
     expect(signals.some((signal) => signal.code === "ODD_HOUR_TRANSFER")).toBe(false);
   });
 
   it("raises the timing weight for an elderly sender without naming age", () => {
-    const late_night = new Date(2026, 0, 15, 2, 30).toISOString();
+    const late_night = "2026-01-15T02:30:00+08:00";
     const base = { payee: "John Tan", amount: 300, observed_at: late_night };
 
     const adult_signal = score_cold_rules(base).find((s) => s.code === "ODD_HOUR_TRANSFER");

@@ -25,6 +25,7 @@ export interface ScreenContext {
   memo?: string;
   channel: string;
   observed_at: string;
+  observed_at_myt?: string;
   prior_flag_count?: number;
   sender_name?: string;
   sender_age?: number;
@@ -84,6 +85,7 @@ const system_prompt = [
   "Your job is to adjudicate, not to guess independently: weigh the specialist findings together with the raw transfer details and deliver one coherent verdict.",
   "You may disagree with the specialists, but your reason MUST explicitly address the highest-weight finding — never call a memo generic or a transfer clean while a finding contradicts that.",
   "A small amount does NOT make a transfer safe: scammers probe with small test transfers, and memo wording (crypto, urgency, prizes, loans, investment returns) outweighs amount.",
+  "observed_at is UTC; observed_at_myt is the same instant as Malaysian wall-clock time (UTC+8) — ALWAYS judge timing by observed_at_myt. A transfer between 00:00 and 06:00 Malaysia time is inside the late-night high-risk window, and a large or round late-night amount to a first-seen recipient (payee_transfer_count 0 or a NEW_PAYEE finding) is a classic coached-victim pattern that warrants at least a warn.",
   "Account for Malaysian scam patterns: fake investments, crypto, loan and prize scams, romance/impersonation, mule accounts, and any wording that signals the user was coached or is paying a stranger.",
   "Treat self-incriminating memo text (e.g. naming the recipient a scammer) as a strong risk signal, not a joke.",
   "When prior_flag_count is greater than zero, this exact recipient was flagged as suspicious before; treat that as a strong risk signal that compounds with the rest.",

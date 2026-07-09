@@ -1,4 +1,5 @@
 import type { RiskSignal } from "@/lib/risk/types";
+import { get_malaysia_hour } from "./malaysia_time";
 
 const high_absolute_amount = 5000;
 const high_absolute_weight = 22;
@@ -107,24 +108,18 @@ function detect_scam_keyword(transfer: ColdTransfer): RiskSignal | null {
 }
 
 /**
- * Flags transfers initiated in the late-night window (00:00–05:59 server-local
- * time), when scam scripts pressure victims to act while support lines are
- * closed and family is asleep. A supporting clue, weighted well below the
- * decisive signals but raised for older senders, whom late-night scam scripts
- * target hardest. The user-facing detail stays behavioural: it describes the
- * timing, never the sender. Silently skipped when the timestamp is absent or
- * invalid.
+ * Flags transfers initiated in the late-night window (00:00–05:59 Malaysia
+ * time, UTC+8), when scam scripts pressure victims to act while support lines
+ * are closed and family is asleep. The hour is always resolved in
+ * Asia/Kuala_Lumpur so a UTC server cannot misread 1 a.m. in Malaysia as
+ * late afternoon. A supporting clue, weighted well below the decisive signals
+ * but raised for older senders, whom late-night scam scripts target hardest.
+ * The user-facing detail stays behavioural: it describes the timing, never the
+ * sender. Silently skipped when the timestamp is absent or invalid.
  */
 function detect_odd_hour_transfer(transfer: ColdTransfer): RiskSignal | null {
-  if (!transfer.observed_at) {
-    return null;
-  }
-  const observed = new Date(transfer.observed_at);
-  if (Number.isNaN(observed.getTime())) {
-    return null;
-  }
-  const local_hour = observed.getHours();
-  if (local_hour >= odd_hour_end_exclusive) {
+  const local_hour = get_malaysia_hour(transfer.observed_at);
+  if (local_hour === null || local_hour >= odd_hour_end_exclusive) {
     return null;
   }
   const is_elderly_sender =
@@ -133,7 +128,7 @@ function detect_odd_hour_transfer(transfer: ColdTransfer): RiskSignal | null {
     layer: "rules",
     code: "ODD_HOUR_TRANSFER",
     weight: is_elderly_sender ? elderly_odd_hour_weight : odd_hour_weight,
-    detail: `Transfer initiated around ${String(local_hour).padStart(2, "0")}:00, inside the late-night high-risk window.`,
+    detail: `Transfer initiated around ${String(local_hour).padStart(2, "0")}:00 Malaysia time, inside the late-night high-risk window.`,
   };
 }
 

@@ -15,6 +15,7 @@ import {
   run_behaviour_agent,
 } from "./behaviour_agent";
 import { run_anomaly_agent } from "./anomaly_agent";
+import { format_malaysia_time } from "@/lib/screen/malaysia_time";
 import type { AgentReport, TransferContext } from "./types";
 
 /**
@@ -170,6 +171,7 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
   const behaviour_stats = await fetch_behaviour_stats(context);
   const enriched_context: TransferContext = {
     ...context,
+    observed_at_myt: format_malaysia_time(context.observed_at) ?? undefined,
     prior_flag_count: behaviour_stats?.prior_flag_count ?? 0,
     payee_transfer_count: behaviour_stats?.payee_count,
     payee_avg_amount: behaviour_stats?.payee_avg_amount,

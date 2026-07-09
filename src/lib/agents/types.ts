@@ -16,6 +16,11 @@ export type AgentName = "risk" | "behaviour" | "anomaly";
  * @property memo        Optional reference/description the user typed.
  * @property channel          Where the transfer was observed (e.g. browser_extension).
  * @property observed_at      ISO timestamp when the transfer was intercepted.
+ * @property observed_at_myt  The same instant as Malaysian wall-clock time
+ *                            (Asia/Kuala_Lumpur, UTC+8), stamped by the main
+ *                            agent so timing-sensitive consumers — above all
+ *                            the AI adjudicator — always see the local hour
+ *                            the sender experienced.
  * @property prior_flag_count How many earlier transfers to this same recipient
  *                            were flagged (advice 'warn' or 'block'). Enriched
  *                            from history before fan-out so every agent and the
@@ -38,6 +43,7 @@ export interface TransferContext {
   memo?: string;
   channel: string;
   observed_at: string;
+  observed_at_myt?: string;
   prior_flag_count?: number;
   sender_name?: string;
   sender_user_id?: string;

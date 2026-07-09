@@ -20,7 +20,7 @@ const coached_transfer: TransferContext = {
   currency: "MYR",
   memo: "",
   channel: "browser_extension",
-  observed_at: new Date(2026, 0, 15, 14, 0).toISOString(),
+  observed_at: "2026-01-15T14:00:00+08:00",
 };
 
 const first_time_recipient = { payee_count: 0, payee_avg_amount: 0, prior_flag_count: 0 };
@@ -62,7 +62,7 @@ describe("coached-scammer scenario (blank memo)", () => {
   it("reaches the DENY band for an elderly sender coached at 2 a.m.", () => {
     const elderly_late_night: TransferContext = {
       ...coached_transfer,
-      observed_at: new Date(2026, 0, 15, 2, 0).toISOString(),
+      observed_at: "2026-01-15T02:00:00+08:00",
       sender_age: 68,
     };
     const state = derive_firewall_state(fuse_risk_score(collect_all_signals(elderly_late_night)));
