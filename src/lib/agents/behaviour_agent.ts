@@ -5,6 +5,7 @@ import {
   type FlaggedAccountRecord,
 } from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
+import { ai_specialist_score } from "./ai_specialist";
 import { coerce_finite_number } from "./numeric";
 import type { AgentReport, TransferContext } from "./types";
 
@@ -13,6 +14,13 @@ const payee_spike_multiple = 3;
 const payee_spike_weight = 20;
 const repeat_flagged_payee_weight = 25;
 const known_flagged_account_weight = 80;
+const behaviour_max_points = 33;
+
+const behaviour_rule_guidance = [
+  "A recipient flagged as suspicious on earlier transfers (prior_flag_count above zero) is a strong risk regardless of amount; worth most of your budget, scaling with how many prior flags exist.",
+  "An amount far above what the sender usually sends this recipient (several times payee_avg_amount) suggests coached escalation or account takeover; worth a large share, scaling with the multiple.",
+  "A known recipient at a typical amount with no prior flags is normal behaviour and deserves zero points.",
+];
 
 /**
  * Per-recipient history returned by the `get_behaviour_stats` Postgres function.
@@ -146,13 +154,69 @@ export async function fetch_behaviour_stats(
 }
 
 /**
+ * Builds the hard-rule signal for a first-seen recipient. Deliberately never
+ * delegated to the AI: newness is a plain fact, and keeping it deterministic
+ * lets the blocklist guard reliably discount it.
+ */
+function build_new_payee_signal(): RiskSignal {
+  return {
+    layer: "behavioral",
+    code: "NEW_PAYEE",
+    weight: new_payee_weight,
+    detail: "First recorded transfer to this recipient.",
+  };
+}
+
+/**
+ * Scores this recipient's prior-transfer history with the AI, guided by the
+ * former hard-coded history rules and capped at this agent's point budget.
+ * Falls back to the deterministic history rules when the AI is unreachable.
+ */
+async function score_history_with_ai(
+  context: TransferContext,
+  stats: BehaviourStats,
+): Promise<RiskSignal[]> {
+  const assessment = await ai_specialist_score({
+    agent_name: "behaviour",
+    domain:
+      "You judge only this sender's prior history with this exact recipient — nothing about the transfer's wording, timing, or the wider population.",
+    max_points: behaviour_max_points,
+    rule_guidance: behaviour_rule_guidance,
+    payload: {
+      amount: context.amount,
+      currency: context.currency,
+      payee_transfer_count: stats.payee_count,
+      payee_avg_amount: stats.payee_avg_amount,
+      prior_flag_count: stats.prior_flag_count,
+    },
+  });
+
+  if (!assessment) {
+    return score_behaviour(context, stats);
+  }
+  if (assessment.points === 0) {
+    return [];
+  }
+  return [
+    {
+      layer: "ai",
+      code: "AI_BEHAVIOUR_ASSESSMENT",
+      weight: assessment.points,
+      detail: assessment.reason,
+    },
+  ];
+}
+
+/**
  * Behaviour agent: the per-recipient specialist.
  *
- * Checks the recipient against the shared scam-account blocklist, then scores
- * the current transfer against this recipient's prior-transfer stats, including
- * any earlier flags against the same recipient. Fail-safe: when the blocklist
- * or history is unavailable that part simply contributes no signals so the
- * screen still completes on the rest.
+ * Two hard rules stay deterministic by design: a blocklist hit and a first-seen
+ * recipient are plain facts, not judgement calls. Everything else about the
+ * recipient's history (prior flags, amount spikes) is judged by the AI within
+ * this agent's point budget, guided by the former hard-coded rules, with the
+ * deterministic rules as the fallback when the AI is unreachable. Fail-safe:
+ * when the blocklist or history is unavailable that part simply contributes no
+ * signals so the screen still completes on the rest.
  *
  * @param context The observed transfer.
  * @param stats   Pre-fetched statistics; omit to have the agent read them. Pass
@@ -169,9 +233,18 @@ export async function run_behaviour_agent(
     fetch_flagged_account(payee_key),
   ]);
 
+  const signals: RiskSignal[] = [];
   const blocklist_signal = score_flagged_account(flagged);
-  const history_signals = resolved ? score_behaviour(context, resolved) : [];
-  const signals = [...(blocklist_signal ? [blocklist_signal] : []), ...history_signals];
+  if (blocklist_signal) {
+    signals.push(blocklist_signal);
+  }
+  if (resolved) {
+    if (resolved.payee_count === 0) {
+      signals.push(build_new_payee_signal());
+    } else {
+      signals.push(...(await score_history_with_ai(context, resolved)));
+    }
+  }
 
   log_event("behaviour-agent", "scored recipient", {
     payee_key,

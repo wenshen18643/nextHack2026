@@ -1,6 +1,7 @@
 import type { RiskSignal } from "@/lib/risk/types";
 import { call_supabase_rpc } from "@/lib/db/supabase_client";
 import { log_event, summarize_signals } from "@/lib/observability/logging";
+import { ai_specialist_score } from "./ai_specialist";
 import { coerce_finite_number } from "./numeric";
 import type { AgentReport, TransferContext } from "./types";
 
@@ -9,6 +10,13 @@ const outlier_weight = 16;
 const velocity_window_minutes = 10;
 const velocity_threshold = 5;
 const velocity_weight = 14;
+const anomaly_max_points = 33;
+
+const anomaly_rule_guidance = [
+  "An amount far above the recorded population (roughly beyond the mean plus two standard deviations) is a statistical outlier worth a large share of your budget, scaling with how extreme it is.",
+  "A burst of transfers in the recent velocity window (recent_count of five or more within the window) suggests automated draining; worth a large share, scaling with the count.",
+  "An amount comfortably inside the population's normal range with no recent burst deserves zero points.",
+];
 
 /**
  * Population statistics returned by the `get_anomaly_stats` Postgres function.
@@ -67,8 +75,10 @@ export function score_anomaly(
  * Anomaly agent: the population-outlier specialist.
  *
  * Reads aggregate statistics across all recorded transfers from Supabase and
- * flags this transfer when it deviates sharply from them. Fail-safe: when stats
- * are unavailable it contributes no signals.
+ * asks the AI to judge how anomalous this transfer is against them, guided by
+ * the former hard-coded outlier and velocity rules and capped at this agent's
+ * point budget. Falls back to the deterministic rules when the AI is
+ * unreachable. Fail-safe: when stats are unavailable it contributes no signals.
  *
  * @param context The observed transfer.
  * @returns The agent report carrying any anomaly signals.
@@ -88,8 +98,37 @@ export async function run_anomaly_agent(context: TransferContext): Promise<Agent
     population_stddev: coerce_finite_number(raw.population_stddev),
     recent_count: coerce_finite_number(raw.recent_count),
   };
-  const signals = score_anomaly(context, stats);
-  log_event("anomaly-agent", "scored population stats", {
+
+  const assessment = await ai_specialist_score({
+    agent_name: "anomaly",
+    domain:
+      "You judge only how this transfer's amount and recent activity compare to the whole recorded population — nothing about wording, timing of day, or this specific recipient.",
+    max_points: anomaly_max_points,
+    rule_guidance: anomaly_rule_guidance,
+    payload: {
+      amount: context.amount,
+      currency: context.currency,
+      population_mean: stats.population_mean,
+      population_stddev: stats.population_stddev,
+      recent_count: stats.recent_count,
+      velocity_window_minutes,
+    },
+  });
+
+  const signals =
+    assessment === null
+      ? score_anomaly(context, stats)
+      : assessment.points > 0
+        ? [
+            {
+              layer: "ai" as const,
+              code: "AI_ANOMALY_ASSESSMENT",
+              weight: assessment.points,
+              detail: assessment.reason,
+            },
+          ]
+        : [];
+  log_event("anomaly-agent", assessment ? "AI scored population stats" : "AI unavailable — scored deterministic rules", {
     population_mean: Math.round(stats.population_mean),
     population_stddev: Math.round(stats.population_stddev),
     recent_count: stats.recent_count,
