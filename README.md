@@ -5,7 +5,7 @@
 Built for **NexHack 2026** — Track 2: *Fintech Risk & Fraud Intelligence*.
 
 ---
-## Canva Link
+## Canva Link (for pitch deck)
 https://canva.link/cd78rs35llu63hu
 
 ## Table of Contents
