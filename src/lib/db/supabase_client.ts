@@ -434,6 +434,66 @@ export async function mark_profile_pro(
   }
 }
 
+/**
+ * One stored screened transfer, as read back for the user dashboard.
+ */
+export interface TransferRecord {
+  id: string;
+  user_id: string | null;
+  payee: string;
+  payee_key: string;
+  amount: number;
+  memo: string | null;
+  currency: string;
+  channel: string;
+  advice: string;
+  score: number;
+  state: string;
+  created_at: string;
+}
+
+/**
+ * Reads the screened transfers for one user, newest first.
+ *
+ * Fail-safe: configuration gaps, timeouts, and HTTP errors resolve to an empty
+ * array so the dashboard can render gracefully.
+ *
+ * @param user_id The Supabase auth user id from the session.
+ * @returns The user's transfer history, or an empty array when unavailable.
+ */
+export async function fetch_transfers_for_user(user_id: string): Promise<TransferRecord[]> {
+  const config = resolve_supabase_config();
+  if (!config) {
+    return [];
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), request_timeout_ms);
+
+  try {
+    const query = new URLSearchParams({
+      user_id: `eq.${user_id}`,
+      select: "id,user_id,payee,payee_key,amount,memo,currency,channel,advice,score,state,created_at",
+      order: "created_at.desc",
+      limit: "200",
+    });
+    const response = await fetch(`${config.url}/rest/v1/transfers?${query}`, {
+      signal: controller.signal,
+      headers: build_auth_headers(config.key),
+    });
+    if (!response.ok) {
+      console.warn(`[supabase] transfers lookup HTTP ${response.status} — returning empty.`);
+      return [];
+    }
+    return (await response.json()) as TransferRecord[];
+  } catch (error) {
+    console.error("[supabase] transfers lookup failed — returning empty:", error);
+    return [];
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function insert_transfer_record(row: Record<string, unknown>): Promise<void> {
   const config = resolve_supabase_config();
   if (!config) {

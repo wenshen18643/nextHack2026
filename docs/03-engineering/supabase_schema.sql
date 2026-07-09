@@ -8,6 +8,7 @@ create extension if not exists "pgcrypto";
 -- this table; the main agent writes one row per screen.
 create table if not exists public.transfers (
   id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users (id) on delete set null,
   payee text not null,
   payee_key text not null,
   amount numeric not null check (amount >= 0),
@@ -20,6 +21,11 @@ create table if not exists public.transfers (
   created_at timestamptz not null default now()
 );
 
+-- Backfill-safe migration: add user_id to existing deployments where the table
+-- was created before this column existed.
+alter table public.transfers add column if not exists user_id uuid references auth.users (id) on delete set null;
+
+create index if not exists transfers_user_id_idx on public.transfers (user_id);
 create index if not exists transfers_payee_key_idx on public.transfers (payee_key);
 create index if not exists transfers_created_at_idx on public.transfers (created_at desc);
 

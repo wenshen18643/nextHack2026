@@ -39,6 +39,12 @@ function SignedOutActions() {
 function SignedInActions({ full_name }: { full_name: string }) {
   return (
     <div className="flex items-center gap-3">
+      <Link
+        href="/dashboard"
+        className="hidden text-sm font-medium text-milk-muted transition-colors hover:text-milk sm:inline"
+      >
+        Dashboard
+      </Link>
       <span className="hidden text-sm font-medium text-milk-muted sm:inline">Hi, {full_name}</span>
       <a
         href="/api/auth/logout"

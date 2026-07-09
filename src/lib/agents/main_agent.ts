@@ -132,6 +132,7 @@ async function log_screened_transfer(
   state: FirewallState,
 ): Promise<void> {
   await insert_transfer_record({
+    user_id: context.sender_user_id ?? null,
     payee: context.payee,
     payee_key: normalize_payee_key(context.payee),
     amount: context.amount,

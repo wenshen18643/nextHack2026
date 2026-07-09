@@ -45,6 +45,7 @@ async function resolve_sender_context(): Promise<SenderContext | undefined> {
     : null;
   return {
     name: profile?.full_name ?? session_user.full_name,
+    user_id: session_user.user_id,
     age: profile ? new Date().getFullYear() - profile.birth_year : undefined,
   };
 }

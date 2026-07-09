@@ -16,11 +16,13 @@ export type ScreenResult = MainAgentResult;
  * the API route. Optional throughout: screening works identically when the
  * sender is anonymous, just without age-aware weighting.
  *
- * @property name The sender's display name.
- * @property age  The sender's approximate age in years.
+ * @property name    The sender's display name.
+ * @property user_id The sender's Supabase auth user id, when known.
+ * @property age     The sender's approximate age in years.
  */
 export interface SenderContext {
   name?: string;
+  user_id?: string;
   age?: number;
 }
 
@@ -38,6 +40,7 @@ function build_context(transfer: ColdTransfer, sender?: SenderContext): Transfer
     channel: extension_channel,
     observed_at: new Date().toISOString(),
     sender_name: sender?.name,
+    sender_user_id: sender?.user_id,
     sender_age: sender?.age,
   };
 }

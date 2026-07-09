@@ -21,6 +21,8 @@ export type AgentName = "risk" | "behaviour" | "anomaly";
  *                            from history before fan-out so every agent and the
  *                            AI adjudicator can weight a repeat offender.
  * @property sender_name         Signed-in sender's display name, when known.
+ * @property sender_user_id      Signed-in sender's Supabase auth user id, used
+ *                               to associate the logged transfer with them.
  * @property sender_age          Signed-in sender's approximate age in years,
  *                               derived from the profile birth year. Powers
  *                               age-aware weighting; never cited to the user.
@@ -38,6 +40,7 @@ export interface TransferContext {
   observed_at: string;
   prior_flag_count?: number;
   sender_name?: string;
+  sender_user_id?: string;
   sender_age?: number;
   payee_transfer_count?: number;
   payee_avg_amount?: number;
