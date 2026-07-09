@@ -97,17 +97,60 @@ function choose_user_reason(
   return summarize_reason(deterministic_signals);
 }
 
+const new_payee_blocklist_floor = 30;
+
 /**
- * Adds the recipient to the shared scam-account blocklist when the AI both
- * blocked the transfer and explicitly asked to flag the account. The double
- * condition means a mild verdict can never blocklist anyone, and the insert is
+ * Decides whether an AI request to blocklist the recipient should be honored.
+ *
+ * Requires a block verdict with an explicit flag, so a mild verdict can never
+ * blocklist anyone. For a first-seen recipient there is one extra guard: the
+ * score with the NEW_PAYEE contribution stripped out must still clear the
+ * warn band on its own. This stops the feedback loop where an account gets
+ * permanently blocklisted merely for being new plus circumstantial timing,
+ * with no independent risk evidence.
+ *
+ * @param ai_verdict The AI adjudication, if one was obtained.
+ * @param signals    The deterministic specialist signals behind the score.
+ * @param score      The final fused risk score.
+ * @returns True when the blocklist insert should proceed.
+ */
+export function should_honor_account_flag(
+  ai_verdict: AiScreenVerdict | null,
+  signals: RiskSignal[],
+  score: number,
+): boolean {
+  if (!ai_verdict?.flag_account || ai_verdict.advice !== "block") {
+    return false;
+  }
+  const new_payee_signal = signals.find((signal) => signal.code === "NEW_PAYEE");
+  if (new_payee_signal && score - new_payee_signal.weight <= new_payee_blocklist_floor) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Adds the recipient to the shared scam-account blocklist when
+ * `should_honor_account_flag` approves the AI's request. The insert is
  * duplicate-safe so an existing (often manual) entry is never overwritten.
  */
 async function blocklist_account_when_ai_requests(
   context: TransferContext,
   ai_verdict: AiScreenVerdict | null,
+  signals: RiskSignal[],
+  score: number,
 ): Promise<void> {
-  if (!ai_verdict?.flag_account || ai_verdict.advice !== "block") {
+  if (!ai_verdict) {
+    return;
+  }
+  if (!should_honor_account_flag(ai_verdict, signals, score)) {
+    if (ai_verdict.flag_account) {
+      log_event("main-agent", "AI asked to blocklist but the guard declined", {
+        payee: context.payee,
+        score,
+        advice: ai_verdict.advice,
+      });
+    }
     return;
   }
   log_event("main-agent", "AI flagged recipient for the blocklist", {
@@ -232,7 +275,7 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
 
   await Promise.all([
     log_screened_transfer(context, advice, score, state),
-    blocklist_account_when_ai_requests(context, ai_verdict),
+    blocklist_account_when_ai_requests(context, ai_verdict, deterministic_signals, score),
   ]);
 
   return {
