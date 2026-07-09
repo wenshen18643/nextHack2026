@@ -80,10 +80,14 @@ export function score_anomaly(
  * point budget. Falls back to the deterministic rules when the AI is
  * unreachable. Fail-safe: when stats are unavailable it contributes no signals.
  *
- * @param context The observed transfer.
+ * @param context  The observed transfer.
+ * @param briefing Optional targeted instruction from the orchestrator agent.
  * @returns The agent report carrying any anomaly signals.
  */
-export async function run_anomaly_agent(context: TransferContext): Promise<AgentReport> {
+export async function run_anomaly_agent(
+  context: TransferContext,
+  briefing?: string,
+): Promise<AgentReport> {
   const rows = await call_supabase_rpc<AnomalyStats[]>("get_anomaly_stats", {
     p_window_minutes: velocity_window_minutes,
   });
@@ -112,6 +116,7 @@ export async function run_anomaly_agent(context: TransferContext): Promise<Agent
       population_stddev: stats.population_stddev,
       recent_count: stats.recent_count,
       velocity_window_minutes,
+      orchestrator_briefing: briefing,
     },
   });
 

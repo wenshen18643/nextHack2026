@@ -15,6 +15,7 @@ import {
   run_behaviour_agent,
 } from "./behaviour_agent";
 import { run_anomaly_agent } from "./anomaly_agent";
+import { ai_orchestrate_briefings, type OrchestratorBriefings } from "./ai_specialist";
 import { format_malaysia_time } from "@/lib/screen/malaysia_time";
 import type { AgentReport, TransferContext } from "./types";
 
@@ -33,6 +34,8 @@ export type ScreenAdvice = "allow" | "warn" | "block";
  * @property signals Every signal that contributed, across all agents.
  * @property agents  Per-agent signal breakdown for explainability.
  * @property ai_used Whether the AI adjudicator contributed to the verdict.
+ * @property orchestration The orchestrator agent's per-specialist briefings,
+ *                         when it produced a plan; surfaced for explainability.
  */
 export interface MainAgentResult {
   advice: ScreenAdvice;
@@ -42,6 +45,7 @@ export interface MainAgentResult {
   signals: RiskSignal[];
   agents: AgentReport[];
   ai_used: boolean;
+  orchestration?: OrchestratorBriefings;
 }
 
 /**
@@ -211,19 +215,33 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
     memo: context.memo ?? "",
   });
 
-  const behaviour_stats = await fetch_behaviour_stats(context);
+  const observed_at_myt = format_malaysia_time(context.observed_at) ?? undefined;
+  const [behaviour_stats, briefings] = await Promise.all([
+    fetch_behaviour_stats(context),
+    ai_orchestrate_briefings({
+      payee: context.payee,
+      amount: context.amount,
+      currency: context.currency,
+      memo: context.memo,
+      observed_at_myt,
+    }),
+  ]);
+  if (briefings) {
+    log_event("main-agent", "orchestrator briefed the specialists", briefings);
+  }
+
   const enriched_context: TransferContext = {
     ...context,
-    observed_at_myt: format_malaysia_time(context.observed_at) ?? undefined,
+    observed_at_myt,
     prior_flag_count: behaviour_stats?.prior_flag_count ?? 0,
     payee_transfer_count: behaviour_stats?.payee_count,
     payee_avg_amount: behaviour_stats?.payee_avg_amount,
   };
 
   const [risk_report, behaviour_report, anomaly_report] = await Promise.all([
-    run_risk_agent(enriched_context),
-    run_behaviour_agent(enriched_context, behaviour_stats),
-    run_anomaly_agent(enriched_context),
+    run_risk_agent(enriched_context, briefings?.risk),
+    run_behaviour_agent(enriched_context, behaviour_stats, briefings?.behaviour),
+    run_anomaly_agent(enriched_context, briefings?.anomaly),
   ]);
 
   const agents = [risk_report, behaviour_report, anomaly_report];
@@ -286,5 +304,6 @@ export async function run_main_agent(context: TransferContext): Promise<MainAgen
     signals,
     agents,
     ai_used: ai_signal !== null,
+    orchestration: briefings ?? undefined,
   };
 }

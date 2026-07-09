@@ -24,10 +24,14 @@ const risk_rule_guidance = [
  * unreachable the deterministic rules score instead, so the agent is always
  * available even on a cold database.
  *
- * @param context The observed transfer.
+ * @param context  The observed transfer.
+ * @param briefing Optional targeted instruction from the orchestrator agent.
  * @returns The agent report carrying the history-free assessment.
  */
-export async function run_risk_agent(context: TransferContext): Promise<AgentReport> {
+export async function run_risk_agent(
+  context: TransferContext,
+  briefing?: string,
+): Promise<AgentReport> {
   const assessment = await ai_specialist_score({
     agent_name: "risk",
     domain:
@@ -42,6 +46,7 @@ export async function run_risk_agent(context: TransferContext): Promise<AgentRep
       observed_at: context.observed_at,
       observed_at_myt: context.observed_at_myt,
       sender_age: context.sender_age,
+      orchestrator_briefing: briefing,
     },
   });
 

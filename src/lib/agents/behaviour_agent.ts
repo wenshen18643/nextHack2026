@@ -175,6 +175,7 @@ function build_new_payee_signal(): RiskSignal {
 async function score_history_with_ai(
   context: TransferContext,
   stats: BehaviourStats,
+  briefing?: string,
 ): Promise<RiskSignal[]> {
   const assessment = await ai_specialist_score({
     agent_name: "behaviour",
@@ -188,6 +189,7 @@ async function score_history_with_ai(
       payee_transfer_count: stats.payee_count,
       payee_avg_amount: stats.payee_avg_amount,
       prior_flag_count: stats.prior_flag_count,
+      orchestrator_briefing: briefing,
     },
   });
 
@@ -218,14 +220,16 @@ async function score_history_with_ai(
  * when the blocklist or history is unavailable that part simply contributes no
  * signals so the screen still completes on the rest.
  *
- * @param context The observed transfer.
- * @param stats   Pre-fetched statistics; omit to have the agent read them. Pass
- *                null explicitly to signal that history was unavailable.
+ * @param context  The observed transfer.
+ * @param stats    Pre-fetched statistics; omit to have the agent read them.
+ *                 Pass null explicitly to signal that history was unavailable.
+ * @param briefing Optional targeted instruction from the orchestrator agent.
  * @returns The agent report carrying any behavioral signals.
  */
 export async function run_behaviour_agent(
   context: TransferContext,
   stats?: BehaviourStats | null,
+  briefing?: string,
 ): Promise<AgentReport> {
   const payee_key = normalize_payee_key(context.payee);
   const [resolved, flagged] = await Promise.all([
@@ -242,7 +246,7 @@ export async function run_behaviour_agent(
     if (resolved.payee_count === 0) {
       signals.push(build_new_payee_signal());
     } else {
-      signals.push(...(await score_history_with_ai(context, resolved)));
+      signals.push(...(await score_history_with_ai(context, resolved, briefing)));
     }
   }
 
